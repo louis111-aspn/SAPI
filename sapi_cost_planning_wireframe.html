@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAPI 경영계획 PKG — 비용계획 Bottom-Up 프로세스 와이어프레임</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #003366;
+    --navy-light: #e6f0ff;
+    --navy-mid: #1a4d8f;
+    --text-primary: #1a1a1a;
+    --text-secondary: #555;
+    --text-tertiary: #888;
+    --bg-page: #f2f3f5;
+    --bg-white: #ffffff;
+    --bg-secondary: #f7f8fa;
+    --border: #d8dce4;
+    --border-light: #eceef2;
+    --success: #0f6e56;
+    --success-bg: #e1f5ee;
+    --warning: #7a5c00;
+    --warning-bg: #fff8e1;
+    --danger: #900;
+    --danger-bg: #ffe0e0;
+    --info: #003366;
+    --info-bg: #e6f0ff;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    font-size: 14px;
+  }
+
+  body {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+
+  /* ─── Global Nav ─── */
+  .global-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--navy);
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+    height: 52px;
+    gap: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .global-nav-brand {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.04em;
+    margin-right: 24px;
+    white-space: nowrap;
+  }
+  .global-nav a {
+    font-size: 12px;
+    color: rgba(255,255,255,0.72);
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .global-nav a:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  .global-nav a.active { background: rgba(255,255,255,0.2); color: #fff; font-weight: 500; }
+
+  /* ─── Page Layout ─── */
+  .page-container { max-width: 1280px; margin: 0 auto; padding: 32px 32px 80px; }
+
+  /* ─── Page Header ─── */
+  .page-header { margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .page-header h1 { font-size: 22px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+  .page-header p { font-size: 13px; color: var(--text-secondary); }
+  .meta-tags { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .meta-tag { font-size: 11px; padding: 3px 10px; border-radius: 10px; border: 0.5px solid var(--border); color: var(--text-secondary); background: var(--bg-white); }
+  .meta-tag.navy { background: var(--navy-light); color: var(--navy); border-color: #b3ccee; }
+
+  /* ─── Section ─── */
+  .section { margin-bottom: 48px; scroll-margin-top: 72px; }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .section-num { width: 28px; height: 28px; border-radius: 50%; background: var(--navy); color: #fff; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .section-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+  .section-subtitle { font-size: 12px; color: var(--text-secondary); }
+  .section-body { background: var(--bg-white); border-radius: var(--radius-lg); border: 0.5px solid var(--border); overflow: hidden; }
+
+  /* ─── Action Title Bar (MBB Style) ─── */
+  .action-title {
+    background: var(--navy);
+    color: #fff;
+    padding: 14px 24px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 1.5;
+  }
+  .action-title span { opacity: 0.65; font-weight: 400; margin-left: 12px; font-size: 11px; }
+
+  /* ─── Process Flow ─── */
+  .process-flow { display: flex; flex-direction: column; gap: 0; }
+  .process-step { display: grid; grid-template-columns: 120px 1fr; border-bottom: 0.5px solid var(--border-light); }
+  .process-step:last-child { border-bottom: none; }
+  .process-phase {
+    background: var(--bg-secondary);
+    border-right: 0.5px solid var(--border);
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-align: center;
+  }
+  .phase-system {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+  .phase-label { font-size: 12px; font-weight: 600; color: var(--navy); }
+  .process-content { padding: 20px 28px; }
+  .process-step-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  .step-num-badge { width: 22px; height: 22px; background: var(--navy); color: #fff; border-radius: 50%; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .process-bullets { display: flex; flex-direction: column; gap: 5px; }
+  .process-bullet { font-size: 12px; color: var(--text-secondary); display: flex; gap: 8px; }
+  .process-bullet::before { content: '·'; color: var(--navy); font-weight: 700; flex-shrink: 0; }
+  .process-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .ptag { font-size: 10px; padding: 2px 8px; border-radius: 3px; }
+  .ptag-hard { background: var(--danger-bg); color: var(--danger); }
+  .ptag-lock { background: #fff0e6; color: #8b4500; }
+  .ptag-ai { background: #f0e6ff; color: #5c00a3; }
+  .ptag-sac { background: var(--info-bg); color: var(--info); }
+  .process-arrow { display: flex; justify-content: center; padding: 4px 0; background: var(--bg-page); }
+  .arrow-icon { font-size: 16px; color: var(--text-tertiary); }
+
+  /* ─── ERD ─── */
+  #erd-container { padding: 24px; overflow-x: auto; min-height: 300px; }
+  .erd-legend { display: flex; gap: 20px; padding: 0 24px 16px; flex-wrap: wrap; }
+  .erd-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+  .erd-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* ─── Tab System ─── */
+  .tab-nav { display: flex; border-bottom: 1px solid var(--border); background: var(--bg-secondary); }
+  .tab-btn { font-size: 12px; padding: 11px 20px; cursor: pointer; color: var(--text-secondary); border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; transition: color 0.15s; white-space: nowrap; }
+  .tab-btn:hover { color: var(--navy); }
+  .tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); font-weight: 500; background: var(--bg-white); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ─── PORTAL Screens ─── */
+  .portal-layout { display: grid; grid-template-columns: 180px 1fr; }
+  .portal-sidebar { background: var(--bg-secondary); border-right: 0.5px solid var(--border); padding: 12px 0; }
+  .sidebar-section { font-size: 10px; font-weight: 600; color: var(--text-tertiary); letter-spacing: 0.08em; padding: 8px 16px 4px; text-transform: uppercase; }
+  .sidebar-item { font-size: 12px; padding: 8px 16px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .sidebar-item:hover { background: var(--border-light); color: var(--text-primary); }
+  .sidebar-item.active { background: var(--navy); color: #fff; font-weight: 500; }
+  .sidebar-item .icon { font-size: 13px; width: 16px; text-align: center; }
+  .portal-content { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* KPI Cards */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .kpi-card { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 14px 16px; border: 0.5px solid var(--border-light); }
+  .kpi-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; }
+  .kpi-val { font-size: 26px; font-weight: 600; color: var(--text-primary); line-height: 1; margin-bottom: 4px; }
+  .kpi-val.warn { color: #b07000; }
+  .kpi-val.danger { color: #c00; }
+  .kpi-val.navy { color: var(--navy); }
+  .kpi-sub { font-size: 11px; color: var(--text-tertiary); }
+
+  /* Cards */
+  .content-card { background: var(--bg-white); border-radius: var(--radius-md); border: 0.5px solid var(--border); padding: 16px 18px; }
+  .card-title { font-size: 12px; font-weight: 600; color: var(--navy); border-bottom: 1px solid var(--border-light); padding-bottom: 8px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+
+  /* Tables */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .data-table th { background: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; padding: 8px 10px; border: 0.5px solid var(--border); text-align: left; white-space: nowrap; }
+  .data-table td { padding: 7px 10px; border: 0.5px solid var(--border-light); vertical-align: middle; }
+  .data-table tr:hover td { background: #f8f9ff; }
+
+  /* Status Pills */
+  .status { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; white-space: nowrap; display: inline-block; }
+  .s-approved { background: var(--info-bg); color: var(--navy); }
+  .s-submitted { background: var(--success-bg); color: var(--success); }
+  .s-pending { background: var(--warning-bg); color: var(--warning); }
+  .s-overdue { background: var(--danger-bg); color: var(--danger); }
+  .s-draft { background: var(--bg-secondary); color: var(--text-secondary); border: 0.5px solid var(--border); }
+
+  /* Progress Bar */
+  .prog-wrap { width: 80px; height: 5px; background: var(--border-light); border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; }
+  .prog-fill { height: 100%; border-radius: 3px; background: var(--navy); }
+  .prog-fill.warn { background: #f0b000; }
+  .prog-fill.danger { background: #c00; }
+
+  /* Form Elements */
+  input[type="text"], input[type="number"], select, textarea {
+    font-size: 12px; padding: 6px 10px; border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg-white); color: var(--text-primary); font-family: inherit; outline: none;
+  }
+  input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus { border-color: var(--navy); }
+  input.sm { padding: 4px 7px; font-size: 11px; width: 80px; }
+
+  .badge { font-size: 10px; padding: 1px 7px; border-radius: 3px; font-weight: 500; }
+  .badge-hard { background: var(--danger-bg); color: var(--danger); }
+  .badge-soft { background: var(--info-bg); color: var(--info); }
+
+  /* Buttons */
+  .btn { font-size: 12px; padding: 7px 16px; border-radius: var(--radius-sm); cursor: pointer; border: 0.5px solid; transition: opacity 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { opacity: 0.85; }
+  .btn-primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .btn-ghost { background: transparent; color: var(--text-secondary); border-color: var(--border); }
+  .btn-sm { font-size: 11px; padding: 4px 12px; }
+  .btn-link { font-size: 11px; color: var(--navy); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; }
+
+  /* ─── SAPI Excel Add-in ─── */
+  .addin-layout { display: grid; grid-template-columns: 1fr 280px; }
+  .excel-pane { border-right: 0.5px solid var(--border); }
+  .excel-toolbar {
+    background: var(--navy);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .excel-toolbar-brand { font-size: 12px; font-weight: 600; color: #fff; margin-right: 12px; }
+  .excel-btn { font-size: 11px; color: rgba(255,255,255,0.85); padding: 4px 12px; border-radius: 3px; border: 0.5px solid rgba(255,255,255,0.3); cursor: pointer; background: transparent; white-space: nowrap; }
+  .excel-btn.primary { background: rgba(255,255,255,0.18); color: #fff; }
+  .excel-toolbar-info { margin-left: auto; font-size: 10px; color: rgba(255,255,255,0.5); }
+  .excel-formula { background: #f0f0f0; border-bottom: 0.5px solid #ccc; padding: 4px 12px; font-size: 11px; color: #555; display: flex; gap: 10px; align-items: center; }
+  .formula-label { color: #999; font-weight: 600; }
+  .excel-table-wrap { overflow-x: auto; }
+  .excel-table { border-collapse: collapse; font-size: 11px; min-width: 100%; }
+  .excel-table th { background: #e8eaed; color: #444; font-weight: 600; padding: 5px 8px; border: 0.5px solid #ccc; text-align: center; white-space: nowrap; position: sticky; top: 0; }
+  .excel-table th.row-h { width: 90px; text-align: left; }
+  .excel-table th.acct-h { width: 130px; text-align: left; }
+  .excel-table th.type-h { width: 70px; }
+  .excel-table td { padding: 4px 7px; border: 0.5px solid #e0e0e0; white-space: nowrap; }
+  .excel-table td.row-head { background: #f5f5f5; font-size: 10px; color: #666; font-weight: 500; border-right: 0.5px solid #ccc; }
+  .excel-table td.acct-name { background: #f5f5f5; font-size: 11px; color: #333; border-right: 0.5px solid #ccc; }
+  .excel-table td.type-cell { background: #f0f0f0; font-size: 9px; color: #888; text-align: center; border-right: 0.5px solid #ccc; }
+  .row-actual { background: #fafafa; }
+  .row-actual td { color: #666; }
+  .row-plan { background: #f0f4ff; }
+  .row-plan td.data { color: var(--navy); font-weight: 500; }
+  .row-plan td.data:focus-within { outline: 2px solid var(--navy); }
+  .cell-edited { background: #fff3cd !important; }
+  .cell-error { background: #ffe0e0 !important; color: #c00 !important; font-weight: 600; }
+  .cell-total { background: #dce8ff !important; color: var(--navy) !important; font-weight: 600; text-align: right; }
+  .cell-total-err { background: #ffd0d0 !important; color: #c00 !important; font-weight: 600; text-align: right; }
+  .cell-total-warn { background: #fff3cd !important; color: #7a5c00 !important; font-weight: 600; text-align: right; }
+  .excel-input { border: none; background: transparent; font-size: 11px; color: inherit; font-family: inherit; width: 48px; text-align: right; }
+  .excel-input:focus { outline: 2px solid var(--navy); border-radius: 2px; }
+  td.data { text-align: right; }
+
+  /* Addin Side Panel */
+  .addin-panel { display: flex; flex-direction: column; }
+  .panel-tab-row { display: flex; border-bottom: 1px solid var(--border); background: var(--bg-secondary); }
+  .panel-tab { flex: 1; font-size: 11px; padding: 8px 0; text-align: center; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-secondary); background: none; border-top: none; border-left: none; border-right: none; }
+  .panel-tab:hover { color: var(--navy); }
+  .panel-tab.active { color: var(--navy); border-bottom-color: var(--navy); font-weight: 600; background: var(--bg-white); }
+  .panel-body { padding: 14px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .panel-tab-content { display: none; flex-direction: column; gap: 10px; }
+  .panel-tab-content.active { display: flex; }
+
+  .alert-box { font-size: 11px; border-radius: var(--radius-sm); padding: 8px 10px; line-height: 1.5; }
+  .alert-error { background: var(--danger-bg); border: 0.5px solid #f0a0a0; color: #900; }
+  .alert-warn { background: var(--warning-bg); border: 0.5px solid #f0c040; color: var(--warning); }
+  .alert-info { background: var(--info-bg); border: 0.5px solid #b3ccee; color: var(--navy); }
+
+  .gl-item { padding-bottom: 12px; margin-bottom: 12px; border-bottom: 0.5px solid var(--border-light); }
+  .gl-item:last-child { border-bottom: none; }
+  .gl-head { font-size: 12px; font-weight: 500; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+  .gl-detail { font-size: 11px; color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
+  .gl-progress { height: 4px; background: var(--border-light); border-radius: 2px; margin-top: 6px; }
+  .gl-fill { height: 100%; border-radius: 2px; }
+
+  .ai-area { background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 10px; }
+  .ai-label { font-size: 10px; font-weight: 600; color: var(--navy); margin-bottom: 6px; letter-spacing: 0.03em; }
+  .ai-textarea { width: 100%; font-size: 11px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 6px 8px; resize: none; background: var(--bg-white); color: var(--text-primary); font-family: inherit; }
+  .ai-result { font-size: 11px; color: var(--text-secondary); background: var(--bg-white); border: 0.5px solid var(--border-light); border-radius: var(--radius-sm); padding: 8px 10px; margin-top: 8px; line-height: 1.6; }
+  .ai-btn { width: 100%; margin-top: 6px; }
+
+  .panel-footer { padding: 12px 14px; border-top: 0.5px solid var(--border); display: flex; gap: 8px; }
+  .footer-btn { flex: 1; font-size: 12px; padding: 8px; border-radius: var(--radius-sm); cursor: pointer; text-align: center; border: 0.5px solid; font-weight: 500; }
+  .btn-save { background: transparent; color: var(--text-secondary); border-color: var(--border); }
+  .btn-submit { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  /* ─── Gantt / Schedule ─── */
+  .schedule-grid { overflow-x: auto; }
+  .gantt-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .gantt-table th { background: var(--bg-secondary); font-weight: 600; color: var(--text-secondary); padding: 7px 10px; border: 0.5px solid var(--border); white-space: nowrap; }
+  .gantt-table td { padding: 7px 10px; border: 0.5px solid var(--border-light); vertical-align: middle; }
+  .gantt-bar-cell { padding: 6px 8px !important; }
+  .gantt-bar-wrap { position: relative; height: 18px; background: var(--bg-secondary); border-radius: 3px; overflow: hidden; }
+  .gantt-bar { height: 100%; border-radius: 3px; display: flex; align-items: center; padding: 0 6px; font-size: 10px; color: #fff; font-weight: 500; white-space: nowrap; }
+  .gb-navy { background: var(--navy); }
+  .gb-teal { background: #1d9e75; }
+  .gb-purple { background: #5c00a3; }
+  .gb-warn { background: #b07000; }
+
+  /* ─── Version info bar ─── */
+  .info-bar { background: var(--info-bg); border: 0.5px solid #b3ccee; border-radius: var(--radius-sm); padding: 10px 16px; font-size: 12px; color: var(--navy); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .info-bar strong { font-weight: 600; }
+  .info-divider { color: #b3ccee; }
+
+  /* ─── Notes ─── */
+  .note-text { font-size: 11px; color: var(--text-tertiary); padding: 4px 0; }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 900px) {
+    .portal-layout { grid-template-columns: 1fr; }
+    .portal-sidebar { display: flex; flex-wrap: wrap; padding: 8px; border-right: none; border-bottom: 0.5px solid var(--border); }
+    .sidebar-section { display: none; }
+    .sidebar-item { padding: 6px 12px; border-radius: var(--radius-sm); }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .addin-layout { grid-template-columns: 1fr; }
+    .addin-panel { border-top: 0.5px solid var(--border); }
+  }
+  @media (max-width: 600px) {
+    .page-container { padding: 16px 12px 60px; }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .global-nav { padding: 0 12px; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Global Navigation -->
+<nav class="global-nav" id="top-nav">
+  <span class="global-nav-brand">SAPI 경영계획 PKG</span>
+  <a href="#s1" class="active" onclick="setActive(this)">① 프로세스</a>
+  <a href="#s2" onclick="setActive(this)">② 데이터모델</a>
+  <a href="#s3" onclick="setActive(this)">③ 가이드라인 설정</a>
+  <a href="#s4" onclick="setActive(this)">④ 일정 관리</a>
+  <a href="#s5" onclick="setActive(this)">⑤ 모니터링</a>
+  <a href="#s6" onclick="setActive(this)">⑥ SAPI Add-in</a>
+  <a href="#s7" onclick="setActive(this)">⑦ 승인 마감</a>
+</nav>
+
+<div class="page-container">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>SAPI 경영계획 PKG — 비용계획 Bottom-Up 프로세스</h1>
+    <p>1차 과제: 전사 Bottom-Up 비용계획 수립 프로세스 구체화 / 데이터베이스 모델링 / 화면 와이어프레임</p>
+    <div class="meta-tags">
+      <span class="meta-tag navy">PORTAL · BTP CAP</span>
+      <span class="meta-tag navy">SAPI · Excel Add-in</span>
+      <span class="meta-tag navy">SAP Analytics Cloud</span>
+      <span class="meta-tag">2026 경영계획</span>
+      <span class="meta-tag">Bottom-Up 비용계획</span>
+      <span class="meta-tag">v1.0 초안</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- S1. 프로세스 플로우                                   -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="section" id="s1">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div>
+        <div class="section-title">비용계획 Bottom-Up 프로세스 플로우</div>
+        <div class="section-subtitle">4단계 단방향 흐름 · STATUS 필드로 단계 전환 제어 · 제출 이후 수정 불가 원칙 적용</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="action-title">
+        계획 가이드라인 설정(PORTAL) → 담당자 입력/제출(SAPI) → 부서 승인(PORTAL) → SAC 이관의 4단계 Bottom-Up 프로세스로 전사 비용계획 수립
+        <span>PORTAL · SAPI · SAC 3-tier 아키텍처</span>
+      </div>
+      <div class="process-flow">
+        <div class="process-step">
+          <div class="process-phase">
+            <span class="phase-system">PORTAL</span>
+            <span class="phase-label">Step 1</span>
+            <span style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">기획팀/CFO</span>
+          </div>
+          <div class="process-content">
+            <div class="process-step-title"><span class="step-num-badge">1</span>계획 가이드라인 설정 및 배포</div>
+            <div class="process-bullets">
+              <div class="process-bullet">주요 비용 계정별(급여·복리후생·교육훈련·접대비·여비교통 등) 가이드라인 설정</div>
+              <div class="process-bullet">HARD 제약(필수): 위반 시 SAPI 입력 즉시 차단 / SOFT 제약(권고): 경고 메시지 표시</div>
+              <div class="process-bullet">제약 유형: 증감률 상한/하한 / 절대금액 상한 / YoY 성장률 기준</div>
+              <div class="process-bullet">부서별 배포 대상 및 열람 권한 설정 후 PORTAL에서 일괄 배포</div>
+            </div>
+            <div class="process-tags">
+              <span class="ptag ptag-hard">HARD 제약</span>
+              <span class="ptag ptag-lock">COST_GUIDELINE 테이블</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="process-arrow"><span class="arrow-icon">↓</span></div>
+
+        <div class="process-step">
+          <div class="process-phase">
+            <span class="phase-system">PORTAL</span>
+            <span class="phase-label">Step 2</span>
+            <span style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">기획팀</span>
+          </div>
+          <div class="process-content">
+            <div class="process-step-title"><span class="step-num-badge">2</span>전사 비용계획 수립 일정 설정</div>
+            <div class="process-bullets">
+              <div class="process-bullet">계획 입력 버전(VERSION) 생성 및 회계연도·입력 기간 설정</div>
+              <div class="process-bullet">부서별 개별 마감일 설정 → 모니터링 대시보드 자동 반영</div>
+              <div class="process-bullet">PLAN_SCHEDULE 테이블로 조직/부서/담당자별 세부 일정 관리</div>
+              <div class="process-bullet">담당자 알림(PORTAL 내 알림 + 이메일) 자동 발송</div>
+            </div>
+            <div class="process-tags">
+              <span class="ptag ptag-lock">PLAN_VERSION 테이블</span>
+              <span class="ptag ptag-lock">PLAN_SCHEDULE 테이블</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="process-arrow"><span class="arrow-icon">↓</span></div>
+
+        <div class="process-step">
+          <div class="process-phase">
+            <span class="phase-system">SAPI</span>
+            <span class="phase-label">Step 3</span>
+            <span style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">개별 담당자</span>
+          </div>
+          <div class="process-content">
+            <div class="process-step-title"><span class="step-num-badge">3</span>개별 담당자 비용계획 입력 및 제출 (SAPI Excel Add-in)</div>
+            <div class="process-bullets">
+              <div class="process-bullet">Excel Add-in에서 전년도 비용 실적 자동 조회(READ-ONLY) → 당기 비용계획 입력(WRITE)</div>
+              <div class="process-bullet">사이드 패널에서 계정별 가이드라인 참조 / HARD 제약 위반 시 입력 즉시 차단 (빨간 셀 + 에러 표시)</div>
+              <div class="process-bullet">AI 에이전트: 전년 실적 기반 계절성 패턴 보존 + 성장률 적용 계획 초안 자동 생성</div>
+              <div class="process-bullet">상태 전환: 임시저장(DRAFT) → 제출(SUBMITTED) · 제출 이후 수정 불가(LOCK)</div>
+            </div>
+            <div class="process-tags">
+              <span class="ptag ptag-hard">입력 즉시 제약 검증</span>
+              <span class="ptag ptag-ai">AI 초안 생성</span>
+              <span class="ptag ptag-lock">제출 후 LOCK</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="process-arrow"><span class="arrow-icon">↓</span></div>
+
+        <div class="process-step" style="border-bottom:none;">
+          <div class="process-phase">
+            <span class="phase-system">PORTAL</span>
+            <span class="phase-label">Step 4</span>
+            <span style="font-size:10px;color:var(--text-tertiary);margin-top:2px;">부서 승인자</span>
+          </div>
+          <div class="process-content">
+            <div class="process-step-title"><span class="step-num-badge">4</span>부서 승인자 비용계획 승인 및 마감</div>
+            <div class="process-bullets">
+              <div class="process-bullet">PORTAL에서 조직/부서/담당자별 제출 현황 모니터링 (제출률 %, 지연 부서 강조)</div>
+              <div class="process-bullet">합계 조회 기준 선택: 승인 기준 / 제출 기준 / 전체 기준(임시저장 포함)</div>
+              <div class="process-bullet">승인(APPROVED) → 마감(CLOSED) 전환 · 마감 후 SAC Planning으로 데이터 이관</div>
+              <div class="process-bullet">APPROVAL_HIST 테이블에 모든 상태 전환 이력 보존 (Audit Trail)</div>
+            </div>
+            <div class="process-tags">
+              <span class="ptag ptag-lock">승인 후 수정 불가</span>
+              <span class="ptag ptag-sac">SAC Planning 자동 이관</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- S2. 데이터베이스 모델                                 -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="section" id="s2">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div>
+        <div class="section-title">데이터베이스 모델 (ERD)</div>
+        <div class="section-subtitle">9개 핵심 테이블 · COST_PLAN을 중심으로 버전/조직/계정/가이드라인/승인이력 연계</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="action-title">COST_PLAN 테이블이 버전·조직·계정·담당자를 모두 참조하는 사실 테이블(Fact Table)로, 모든 비용계획 데이터의 단일 진실 공급원(SSOT) 역할을 수행함</div>
+      <div id="erd-container"><div id="erd-svg-wrap"></div></div>
+      <!-- Table Design Notes -->
+      <div style="border-top:0.5px solid var(--border);padding:20px 24px;background:var(--bg-secondary);">
+        <div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:12px;">핵심 테이블 설계 원칙</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;">
+          <div style="font-size:11px;color:var(--text-secondary);line-height:1.6;">
+            <strong style="color:var(--text-primary);">COST_PLAN</strong><br>
+            월별(period) × 계정(acct_cd) × 담당자 단위 입력. STATUS: DRAFT→SUBMITTED→APPROVED→CLOSED. 제출 이후 서버에서 수정 차단.
+          </div>
+          <div style="font-size:11px;color:var(--text-secondary);line-height:1.6;">
+            <strong style="color:var(--text-primary);">COST_GUIDELINE</strong><br>
+            constraint_type으로 HARD/SOFT 구분. 버전별 독립 설정 가능. SAPI 입력 시 실시간 검증 호출.
+          </div>
+          <div style="font-size:11px;color:var(--text-secondary);line-height:1.6;">
+            <strong style="color:var(--text-primary);">COST_ACTUAL</strong><br>
+            READ-ONLY 참조 전용. SAC에서 주기적으로 동기화. SAPI에서 전년 비교 기준값으로 활용.
+          </div>
+          <div style="font-size:11px;color:var(--text-secondary);line-height:1.6;">
+            <strong style="color:var(--text-primary);">APPROVAL_HIST</strong><br>
+            모든 상태 전환 이력(생성·수정·제출·승인·반려·마감) 보존. 규정 준수 감사 대응용.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- S3. PORTAL — 가이드라인 설정                         -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="section" id="s3">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div>
+        <div class="section-title">화면 ①: PORTAL — 비용계획 가이드라인 설정</div>
+        <div class="section-subtitle">기획팀/CFO 사용 · HARD/SOFT 제약 유형별 계정 설정 · 부서 배포</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="action-title">계정별 HARD/SOFT 제약 유형을 명확히 분리하여, SAPI 입력 시 적용 방식(차단 vs 경고)의 근거 데이터로 활용함</div>
+      <div class="portal-layout">
+        <!-- Sidebar -->
+        <div class="portal-sidebar">
+          <div class="sidebar-section">계획관리</div>
+          <div class="sidebar-item active"><span class="icon">📋</span>가이드라인 설정</div>
+          <div class="sidebar-item"><span class="icon">📅</span>일정 수립</div>
+          <div class="sidebar-item"><span class="icon">📊</span>제출 모니터링</div>
+          <div class="sidebar-item"><span class="icon">✅</span>승인 현황</div>
+          <div class="sidebar-section">시스템</div>
+          <div class="sidebar-item"><span class="icon">⚙️</span>버전 관리</div>
+          <div class="sidebar-item"><span class="icon">👤</span>권한 관리</div>
+        </div>
+        <!-- Content -->
+        <div class="portal-content">
+          <!-- 버전 설정 -->
+          <div class="info-bar">
+            <strong>버전:</strong> 2026_COST_V1
+            <span class="info-divider">|</span>
+            <strong>회계연도:</strong> 2026
+            <span class="info-divider">|</span>
+            <strong>입력기간:</strong> 2025-11-01 ~ 2025-11-30
+            <span class="info-divider">|</span>
+            <span class="status s-draft">설정 중</span>
+            <button class="btn btn-ghost btn-sm" style="margin-left:auto;">버전 복사</button>
+            <button class="btn btn-primary btn-sm">신규 버전 생성</button>
+          </div>
+
+          <!-- 가이드라인 테이블 -->
+          <div class="content-card">
+            <div class="card-title">
+              비용 계정별 가이드라인 설정
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-ghost btn-sm">Excel 업로드</button>
+                <button class="btn btn-ghost btn-sm">+ 계정 추가</button>
+              </div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>계정코드</th><th>계정명</th><th>YoY 증감률 기준(%)</th>
+                    <th>상한 금액(만원)</th><th>하한 금액(만원)</th>
+                    <th>제약 유형</th><th>HARD/SOFT</th><th>비고</th><th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>6110</td><td>급여</td>
+                    <td><input class="sm" type="number" value="5.0"> %</td>
+                    <td><input class="sm" type="number" placeholder="-"></td>
+                    <td><input class="sm" type="number" value="0"></td>
+                    <td><select style="font-size:11px;padding:3px 6px;"><option selected>증감률</option><option>절대금액</option><option>항목별</option></select></td>
+                    <td><span class="badge badge-hard">HARD</span></td>
+                    <td style="font-size:10px;color:var(--text-tertiary);">초과 시 입력 차단</td>
+                    <td><button class="btn-link">수정</button></td>
+                  </tr>
+                  <tr>
+                    <td>6210</td><td>복리후생비</td>
+                    <td><input class="sm" type="number" value="3.0"> %</td>
+                    <td><input class="sm" type="number" value="5000"></td>
+                    <td><input class="sm" type="number" value="0"></td>
+                    <td><select style="font-size:11px;padding:3px 6px;"><option selected>증감률</option><option>절대금액</option></select></td>
+                    <td><span class="badge badge-hard">HARD</span></td>
+                    <td style="font-size:10px;color:var(--text-tertiary);">연간 상한 5,000만원</td>
+                    <td><button class="btn-link">수정</button></td>
+                  </tr>
+                  <tr>
+                    <td>6310</td><td>교육훈련비</td>
+                    <td><input class="sm" type="number" value="10.0"> %</td>
+                    <td><input class="sm" type="number" value="2000"></td>
+                    <td><input class="sm" type="number" placeholder="-"></td>
+                    <td><select style="font-size:11px;padding:3px 6px;"><option>증감률</option><option selected>절대금액</option></select></td>
+                    <td><span class="badge badge-soft">SOFT</span></td>
+                    <td style="font-size:10px;color:var(--text-tertiary);">초과 시 경고만</td>
+                    <td><button class="btn-link">수정</button></td>
+                  </tr>
+                  <tr>
+                    <td>6410</td><td>접대비</td>
+                    <td><input class="sm" type="number" value="0.0"> %</td>
+                    <td><input class="sm" type="number" value="1000"></td>
+                    <td><input class="sm" type="number" value="0"></td>
+                    <td><select style="font-size:11px;padding:3px 6px;"><option selected>증감률</option><option>절대금액</option></select></td>
+                    <td><span class="badge badge-hard">HARD</span></td>
+                    <td style="font-size:10px;color:var(--text-tertiary);">전년比 동결, 연 1,000만원 상한</td>
+                    <td><button class="btn-link">수정</button></td>
+                  </tr>
+                  <tr>
+                    <td>6510</td><td>여비교통비</td>
+                    <td><input class="sm" type="number" value="5.0"> %</td>
+                    <td><input class="sm" type="number" value="3000"></td>
+                    <td><input class="sm" type="number" placeholder="-"></td>
+                    <td><select style="font-size:11px;padding:3px 6px;"><option selected>증감률</option><option>절대금액</option></select></td>
+                    <td><span class="badge badge-soft">SOFT</span></td>
+                    <td style="font-size:10px;color:var(--text-tertiary);">초과 시 경고만</td>
+                    <td><button class="btn-link">수정</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;">
+              <p class="note-text">※ HARD: SAPI 입력 시 위반하면 저장 즉시 차단 / SOFT: 경고 메시지만 표시 후 저장 허용</p>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-ghost" onclick="alert('임시저장 완료')">임시저장</button>
+                <button class="btn btn-primary" onclick="alert('가이드라인 저장 후 부서 배포를 진행합니다.')">저장 및 배포 →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- S4. PORTAL — 일정 관리                              -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="section" id="s4">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div>
+        <div class="section-title">화면 ②: PORTAL — 비용계획 수립 일정 관리</div>
+        <div class="section-subtitle">기획팀 사용 · 부서별 마감일 설정 · Gantt 형태 일정 시각화</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="action-title">부서별 마감일 분산 설정으로 승인 병목을 방지하고, Gantt 시각화로 전체 일정을 한눈에 관리함</div>
+      <div class="portal-layout">
+        <div class="portal-sidebar">
+          <div class="sidebar-section">계획관리</div>
+          <div class="sidebar-item"><span class="icon">📋</span>가이드라인 설정</div>
+          <div class="sidebar-item active"><span class="icon">📅</span>일정 수립</div>
+          <div class="sidebar-item"><span class="icon">📊</span>제출 모니터링</div>
+          <div class="sidebar-item"><span class="icon">✅</span>승인 현황</div>
+          <div class="sidebar-section">시스템</div>
+          <div class="sidebar-item"><span class="icon">⚙️</span>버전 관리</div>
+          <div class="sidebar-item"><span class="icon">👤</span>권한 관리</div>
+        </div>
+        <div class="portal-content">
+          <div class="info-bar">
+            <strong>버전:</strong> 2026_COST_V1
+            <span class="info-divider">|</span>
+            <strong>입력기간:</strong> 2025-11-01 ~ 2025-11-30
+            <span class="info-divider">|</span>
+            <strong>승인기간:</strong> 2025-12-01 ~ 2025-12-15
+            <button class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="alert('일정 저장 및 담당자 알림 발송')">일정 저장 및 알림 발송</button>
+          </div>
+          <div class="content-card">
+            <div class="card-title">부서별 세부 일정 (Gantt)</div>
+            <div class="schedule-grid">
+              <table class="gantt-table">
+                <thead>
+                  <tr>
+                    <th style="width:100px;">부문</th>
+                    <th style="width:120px;">부서</th>
+                    <th style="width:80px;">담당 승인자</th>
+                    <th style="width:80px;">입력 마감</th>
+                    <th style="width:80px;">승인 마감</th>
+                    <th style="width:260px;">일정 (11/1 ~ 12/15)</th>
+                    <th style="width:60px;">상태</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>영업1부문</td><td>서울영업팀</td><td>김팀장</td><td>11/15</td><td>12/05</td>
+                    <td class="gantt-bar-cell">
+                      <div class="gantt-bar-wrap">
+                        <div class="gantt-bar gb-navy" style="width:55%;position:absolute;">담당자 입력</div>
+                        <div class="gantt-bar gb-teal" style="width:30%;margin-left:57%;position:absolute;">승인</div>
+                      </div>
+                    </td>
+                    <td><span class="status s-approved">완료</span></td>
+                  </tr>
+                  <tr>
+                    <td>영업1부문</td><td>경기영업팀</td><td>이팀장</td><td>11/15</td><td>12/08</td>
+                    <td class="gantt-bar-cell">
+                      <div class="gantt-bar-wrap" style="position:relative;height:18px;">
+                        <div class="gantt-bar gb-navy" style="width:55%;position:absolute;top:0;">담당자 입력</div>
+                        <div class="gantt-bar gb-teal" style="width:35%;margin-left:57%;position:absolute;top:0;">승인</div>
+                      </div>
+                    </td>
+                    <td><span class="status s-submitted">제출완료</span></td>
+                  </tr>
+                  <tr>
+                    <td>영업2부문</td><td>부산영업팀</td><td>박팀장</td><td>11/20</td><td>12/10</td>
+                    <td class="gantt-bar-cell">
+                      <div class="gantt-bar-wrap" style="position:relative;height:18px;">
+                        <div class="gantt-bar gb-warn" style="width:65%;position:absolute;top:0;">입력중 (지연위험)</div>
+                      </div>
+                    </td>
+                    <td><span class="status s-pending">진행중</span></td>
+                  </tr>
+                  <tr>
+                    <td>영업2부문</td><td>대전영업팀</td><td>최팀장</td><td>11/20</td><td>12/10</td>
+                    <td class="gantt-bar-cell">
+                      <div class="gantt-bar-wrap" style="position:relative;height:18px;">
+                        <div class="gantt-bar gb-navy" style="width:65%;position:absolute;top:0;">담당자 입력</div>
+                      </div>
+                    </td>
+                    <td><span class="status s-draft">미시작</span></td>
+                  </tr>
+                  <tr>
+                    <td>관리부문</td><td>재무팀</td><td>정팀장</td><td>11/18</td><td>12/05</td>
+                    <td class="gantt-bar-cell">
+                      <div class="gantt-bar-wrap" style="position:relative;height:18px;">
+                        <div class="gantt-bar gb-navy" style="width:58%;position:absolute;top:0;">담당자 입력</div>
+                        <div class="gantt-bar gb-teal" style="width:25%;margin-left:60%;position:absolute;top:0;">승인</div>
+                      </div>
+                    </td>
+                    <td><span class="status s-approved">완료</span></td>
+                  </tr>
+                  <tr>
+                    <td>관리부문</td><td>HR팀</td><td>강팀장</td><td>11/25</td><td>12/12</td>
+                    <td class="gantt-bar-cell">
+                      <div class="gantt-bar-wrap" style="position:relative;height:18px;">
+                        <div class="gantt-bar gb-navy" style="width:78%;position:absolute;top:0;">담당자 입력</div>
+                      </div>
+                    </td>
+                    <td><span class="status s-draft">미시작</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="note-text" style="margin-top:10px;">※ 마감일 D-3 이내 미제출 부서에 자동 알림 발송 / 마감일 경과 시 PORTAL에 '지연' 상태 자동 표시</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- S5. PORTAL — 제출 모니터링                           -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="section" id="s5">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div>
+        <div class="section-title">화면 ③: PORTAL — 제출 현황 모니터링</div>
+        <div class="section-subtitle">경영진/기획팀 사용 · KPI + 부서별 현황 · 합계 기준 전환 기능</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="action-title">KPI 카드(경영자 시각)와 부서별 제출현황 테이블(운영자 시각)을 이원화하여 단일 화면에서 전체 현황 파악 가능</div>
+      <div class="portal-layout">
+        <div class="portal-sidebar">
+          <div class="sidebar-section">계획관리</div>
+          <div class="sidebar-item"><span class="icon">📋</span>가이드라인 설정</div>
+          <div class="sidebar-item"><span class="icon">📅</span>일정 수립</div>
+          <div class="sidebar-item active"><span class="icon">📊</span>제출 모니터링</div>
+          <div class="sidebar-item"><span class="icon">✅</span>승인 현황</div>
+          <div class="sidebar-section">시스템</div>
+          <div class="sidebar-item"><span class="icon">⚙️</span>버전 관리</div>
+          <div class="sidebar-item"><span class="icon">👤</span>권한 관리</div>
+        </div>
+        <div class="portal-content">
+          <div class="kpi-row">
+            <div class="kpi-card">
+              <div class="kpi-label">전체 제출률</div>
+              <div class="kpi-val navy">68%</div>
+              <div class="kpi-sub">34/50 부서 · D-8 남음</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">승인 완료</div>
+              <div class="kpi-val">21</div>
+              <div class="kpi-sub">부서 (승인 기준)</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">지연 부서</div>
+              <div class="kpi-val danger">6</div>
+              <div class="kpi-sub">마감일 초과</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">계획 합계 (제출기준)</div>
+              <div class="kpi-val navy" style="font-size:20px;">84.2억</div>
+              <div class="kpi-sub">전년比 +5.3%</div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="card-title">
+              부서별 제출 현황
+              <div style="display:flex;gap:6px;align-items:center;">
+                <span style="font-size:11px;color:var(--text-secondary);">합계 기준:</span>
+                <button class="btn btn-primary btn-sm" onclick="alert('승인 기준 합계로 변경')">승인기준</button>
+                <button class="btn btn-ghost btn-sm" onclick="alert('제출 기준 합계로 변경')">제출기준</button>
+                <button class="btn btn-ghost btn-sm" onclick="alert('전체 기준 합계로 변경')">전체기준</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+              <button class="btn btn-ghost btn-sm">전체</button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:var(--danger);">지연 (6)</button>
+              <button class="btn btn-ghost btn-sm">미제출</button>
+              <button class="btn btn-ghost btn-sm">승인완료</button>
+              <input type="text" placeholder="부서명 검색..." style="margin-left:auto;font-size:11px;padding:4px 10px;width:160px;">
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>부문</th><th>부서</th><th>마감일</th><th>제출현황</th>
+                    <th>진행률</th><th>계획합계(제출)</th><th>전년실적</th><th>증감률</th><th>상태</th><th>액션</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>영업1부문</td><td>서울영업팀</td><td>11/15</td><td>5/5명</td>
+                    <td><div class="prog-wrap"><div class="prog-fill" style="width:100%"></div></div> 100%</td>
+                    <td style="text-align:right;font-weight:500;">12.4억</td>
+                    <td style="text-align:right;color:var(--text-secondary);">11.8억</td>
+                    <td style="color:var(--danger);">+5.1%</td>
+                    <td><span class="status s-approved">승인완료</span></td>
+                    <td><button class="btn-link">상세</button></td>
+                  </tr>
+                  <tr>
+                    <td>영업1부문</td><td>경기영업팀</td><td>11/15</td><td>3/4명</td>
+                    <td><div class="prog-wrap"><div class="prog-fill warn" style="width:75%"></div></div> 75%</td>
+                    <td style="text-align:right;font-weight:500;">8.1억</td>
+                    <td style="text-align:right;color:var(--text-secondary);">8.5억</td>
+                    <td style="color:var(--info);">-4.7%</td>
+                    <td><span class="status s-submitted">제출완료</span></td>
+                    <td><button class="btn-link" onclick="alert('승인 처리 화면으로 이동')">승인 →</button></td>
+                  </tr>
+                  <tr style="background:#fff8f8;">
+                    <td>영업2부문</td><td>부산영업팀</td><td style="color:var(--danger);">11/15 ⚠</td><td>1/3명</td>
+                    <td><div class="prog-wrap"><div class="prog-fill danger" style="width:33%"></div></div> 33%</td>
+                    <td style="text-align:right;color:var(--text-tertiary);">3.2억</td>
+                    <td style="text-align:right;color:var(--text-secondary);">9.1억</td>
+                    <td style="color:var(--text-tertiary);">-</td>
+                    <td><span class="status s-overdue">지연</span></td>
+                    <td><button class="btn-link" onclick="alert('독촉 알림 발송 완료')">독촉 발송</button></td>
+                  </tr>
+                  <tr style="background:#fff8f8;">
+                    <td>영업2부문</td><td>대전영업팀</td><td style="color:var(--warning);">11/20</td><td>0/2명</td>
+                    <td><div class="prog-wrap"><div class="prog-fill" style="width:0%"></div></div> 0%</td>
+                    <td style="text-align:right;color:var(--text-tertiary);">-</td>
+                    <td style="text-align:right;color:var(--text-secondary);">6.2억</td>
+                    <td style="color:var(--text-tertiary);">-</td>
+                    <td><span class="status s-pending">미제출</span></td>
+                    <td><button class="btn-link" onclick="alert('독촉 알림 발송 완료')">독촉 발송</button></td>
+                  </tr>
+                  <tr>
+                    <td>관리부문</td><td>재무팀</td><td>11/18</td><td>2/2명</td>
+                    <td><div class="prog-wrap"><div class="prog-fill" style="width:100%"></div></div> 100%</td>
+                    <td style="text-align:right;font-weight:500;">5.8억</td>
+                    <td style="text-align:right;color:var(--text-secondary);">5.5억</td>
+                    <td style="color:var(--danger);">+5.5%</td>
+                    <td><span class="status s-approved">승인완료</span></td>
+                    <td><button class="btn-link">상세</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- S6. SAPI Excel Add-in                              -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="section" id="s6">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <div>
+        <div class="section-title">화면 ④: SAPI Excel Add-in — 비용계획 입력</div>
+        <div class="section-subtitle">개별 담당자 사용 · 전년 실적 조회 + 계획 입력 + 가이드라인 실시간 검증 + AI 초안 생성</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="action-title">전년 실적(READ) 행과 계획 입력(WRITE) 행을 계정별로 쌍으로 배치하여 YoY 비교를 즉시 가능하게 하며, HARD 제약 위반 시 셀 즉시 차단 처리함</div>
+
+      <div class="addin-layout">
+        <!-- Excel Pane -->
+        <div class="excel-pane">
+          <div class="excel-toolbar">
+            <span class="excel-toolbar-brand">SAPI Cost Planning</span>
+            <button class="excel-btn primary" onclick="alert('SAC에서 데이터 조회 완료')">조회</button>
+            <button class="excel-btn" onclick="alert('임시저장 완료 (DRAFT 상태)')">저장</button>
+            <button class="excel-btn" onclick="submitPlan()">제출</button>
+            <span class="excel-toolbar-info">버전: 2026_COST_V1 · 서울영업팀 · 홍길동</span>
+          </div>
+          <div class="excel-formula">
+            <span class="formula-label">fx</span>
+            <span>단위: 천원 · 회색행=전년실적(조회전용) · 파란행=계획입력 · 노란셀=수정됨 · 빨간셀=제약위반</span>
+          </div>
+          <div class="excel-table-wrap">
+            <table class="excel-table" id="excel-grid">
+              <thead>
+                <tr>
+                  <th class="row-h">계정코드</th>
+                  <th class="acct-h">계정명</th>
+                  <th class="type-h">구분</th>
+                  <th>1월</th><th>2월</th><th>3월</th><th>4월</th><th>5월</th><th>6월</th>
+                  <th>7월</th><th>8월</th><th>9월</th><th>10월</th><th>11월</th><th>12월</th>
+                  <th style="min-width:70px;">연간합계</th>
+                </tr>
+              </thead>
+              <tbody id="excel-tbody">
+              </tbody>
+            </table>
+          </div>
+          <p class="note-text" style="padding:8px 12px;border-top:0.5px solid var(--border-light);">※ HARD 제약(빨간셀): 저장/제출 버튼 비활성화 · SOFT 제약(노란셀): 경고 표시 후 저장 허용</p>
+        </div>
+
+        <!-- Side Panel -->
+        <div class="addin-panel">
+          <div class="panel-tab-row">
+            <button class="panel-tab active" onclick="switchPanelTab(this,'panel-guideline')">가이드라인</button>
+            <button class="panel-tab" onclick="switchPanelTab(this,'panel-ai')">AI 초안</button>
+            <button class="panel-tab" onclick="switchPanelTab(this,'panel-alert')">알림 <span id="alert-badge" style="background:#c00;color:#fff;border-radius:8px;font-size:9px;padding:1px 5px;">1</span></button>
+          </div>
+          <div class="panel-body">
+            <!-- Guideline Panel -->
+            <div class="panel-tab-content active" id="panel-guideline">
+              <div class="alert-box alert-error">⛔ <strong>6410 접대비</strong> 연간 합계(4,800만원)가 HARD 상한(1,000만원)을 초과합니다. 12월 입력값을 확인하세요.</div>
+              <div class="gl-item">
+                <div class="gl-head">6110 급여 <span class="badge badge-hard">HARD</span></div>
+                <div class="gl-detail">증감률 기준: 전년比 +5.0% 이하<br>현재: +5.1% ⚠ 허용범위 근접 (임계치 내)</div>
+                <div class="gl-progress"><div class="gl-fill" style="width:95%;background:#f0b000;"></div></div>
+              </div>
+              <div class="gl-item">
+                <div class="gl-head">6410 접대비 <span class="badge badge-hard">HARD</span></div>
+                <div class="gl-detail">상한: 연간 1,000만원<br>현재 합계: <strong style="color:#c00;">4,800만원 (초과)</strong></div>
+                <div class="gl-progress"><div class="gl-fill" style="width:100%;background:#c00;"></div></div>
+              </div>
+              <div class="gl-item">
+                <div class="gl-head">6310 교육훈련비 <span class="badge badge-soft">SOFT</span></div>
+                <div class="gl-detail">권고 증감률: +10% / 현재: +14.9% (경고)</div>
+                <div class="gl-progress"><div class="gl-fill" style="width:80%;background:var(--navy);"></div></div>
+              </div>
+              <div class="gl-item" style="border-bottom:none;">
+                <div class="gl-head">6510 여비교통비 <span class="badge badge-soft">SOFT</span></div>
+                <div class="gl-detail">권고 증감률: +5% / 현재: +4.2% (정상)</div>
+                <div class="gl-progress"><div class="gl-fill" style="width:50%;background:var(--navy);"></div></div>
+              </div>
+            </div>
+
+            <!-- AI Panel -->
+            <div class="panel-tab-content" id="panel-ai">
+              <div class="alert-box alert-info">🤖 AI 에이전트가 전년 실적 기반으로 계획 초안을 자동 생성합니다. 프롬프트를 입력하거나 기본값으로 실행하세요.</div>
+              <div class="ai-area">
+                <div class="ai-label">📝 프롬프트 입력</div>
+                <textarea class="ai-textarea" rows="3" id="ai-prompt" placeholder="예: 전년 실적 기반 5% 성장, 계절성 패턴 유지, 접대비는 상한 내 조정"></textarea>
+                <button class="btn btn-primary ai-btn btn-sm" onclick="runAI()">AI 초안 생성 →</button>
+              </div>
+              <div class="ai-result" id="ai-result" style="display:none;"></div>
+            </div>
+
+            <!-- Alert Panel -->
+            <div class="panel-tab-content" id="panel-alert">
+              <div class="alert-box alert-error">⛔ <strong>[HARD 오류]</strong> 6410 접대비 연간합계 4,800만원 → 상한(1,000만원) 초과. 제출 불가.</div>
+              <div class="alert-box alert-warn">△ <strong>[SOFT 경고]</strong> 6310 교육훈련비 +14.9% → 권고 범위(+10%) 초과. 확인 후 제출 가능.</div>
+              <div class="alert-box alert-info">ℹ️ 마감일: 2025-11-15 (D-3). 제출 후 수정 불가합니다.</div>
+            </div>
+          </div>
+
+          <div class="panel-footer">
+            <button class="footer-btn btn-save" onclick="alert('임시저장 완료. 제출 전까지 수정 가능합니다.')">임시저장</button>
+            <button class="footer-btn btn-submit" onclick="submitPlan()">제출 →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- S7. PORTAL — 승인 마감                              -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="section" id="s7">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <div>
+        <div class="section-title">화면 ⑤: PORTAL — 부서 승인자 승인 및 마감</div>
+        <div class="section-subtitle">부서 승인자/CFO 사용 · 조직별 합계 조회 · 승인/반려/마감 처리</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="action-title">승인자는 담당자별 계획 상세와 전년 대비 증감 분석을 확인한 후 승인/반려하고, 마감 시 SAC Planning으로 자동 이관함</div>
+      <div class="portal-layout">
+        <div class="portal-sidebar">
+          <div class="sidebar-section">계획관리</div>
+          <div class="sidebar-item"><span class="icon">📋</span>가이드라인 설정</div>
+          <div class="sidebar-item"><span class="icon">📅</span>일정 수립</div>
+          <div class="sidebar-item"><span class="icon">📊</span>제출 모니터링</div>
+          <div class="sidebar-item active"><span class="icon">✅</span>승인 현황</div>
+          <div class="sidebar-section">시스템</div>
+          <div class="sidebar-item"><span class="icon">⚙️</span>버전 관리</div>
+          <div class="sidebar-item"><span class="icon">👤</span>권한 관리</div>
+        </div>
+        <div class="portal-content">
+          <div class="info-bar">
+            <strong>버전:</strong> 2026_COST_V1 · 영업1부문 · 경기영업팀
+            <span class="info-divider">|</span>
+            <strong>제출일:</strong> 2025-11-14
+            <span class="info-divider">|</span>
+            <span class="status s-submitted">제출완료</span>
+          </div>
+
+          <div class="kpi-row" style="grid-template-columns:repeat(3,1fr);">
+            <div class="kpi-card">
+              <div class="kpi-label">제출 계획 합계</div>
+              <div class="kpi-val navy" style="font-size:20px;">8.1억</div>
+              <div class="kpi-sub">3명 담당자 제출</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">전년 실적 합계</div>
+              <div class="kpi-val" style="font-size:20px;">8.5억</div>
+              <div class="kpi-sub">2025년 ACTUAL</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">전년比 증감</div>
+              <div class="kpi-val" style="font-size:20px;color:#1d9e75;">-4.7%</div>
+              <div class="kpi-sub">가이드라인 범위 내</div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="card-title">담당자별 비용계획 (계정별 합계)</div>
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>계정코드</th><th>계정명</th>
+                    <th style="text-align:right;">전년실적(천원)</th>
+                    <th style="text-align:right;">2026 계획(천원)</th>
+                    <th style="text-align:right;">증감액</th>
+                    <th style="text-align:right;">증감률</th>
+                    <th>가이드 준수</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>6110</td><td>급여</td>
+                    <td style="text-align:right;">520,000</td>
+                    <td style="text-align:right;font-weight:500;color:var(--navy);">546,000</td>
+                    <td style="text-align:right;color:var(--danger);">+26,000</td>
+                    <td style="text-align:right;color:var(--danger);">+5.0%</td>
+                    <td><span class="status s-approved">✓ HARD 준수</span></td>
+                  </tr>
+                  <tr>
+                    <td>6210</td><td>복리후생비</td>
+                    <td style="text-align:right;">48,000</td>
+                    <td style="text-align:right;font-weight:500;color:var(--navy);">49,440</td>
+                    <td style="text-align:right;color:var(--danger);">+1,440</td>
+                    <td style="text-align:right;color:var(--danger);">+3.0%</td>
+                    <td><span class="status s-approved">✓ HARD 준수</span></td>
+                  </tr>
+                  <tr>
+                    <td>6310</td><td>교육훈련비</td>
+                    <td style="text-align:right;">16,000</td>
+                    <td style="text-align:right;font-weight:500;color:var(--navy);">18,380</td>
+                    <td style="text-align:right;color:var(--danger);">+2,380</td>
+                    <td style="text-align:right;color:#b07000;">+14.9% △</td>
+                    <td><span class="status s-pending">△ SOFT 경고</span></td>
+                  </tr>
+                  <tr>
+                    <td>6510</td><td>여비교통비</td>
+                    <td style="text-align:right;">28,000</td>
+                    <td style="text-align:right;font-weight:500;color:var(--navy);">29,180</td>
+                    <td style="text-align:right;color:var(--danger);">+1,180</td>
+                    <td style="text-align:right;color:var(--danger);">+4.2%</td>
+                    <td><span class="status s-approved">✓ SOFT 범위</span></td>
+                  </tr>
+                  <tr style="background:var(--bg-secondary);">
+                    <td colspan="2" style="font-weight:600;text-align:right;">합계</td>
+                    <td style="text-align:right;font-weight:600;">612,000</td>
+                    <td style="text-align:right;font-weight:600;color:var(--navy);">643,000</td>
+                    <td style="text-align:right;font-weight:600;color:var(--danger);">+31,000</td>
+                    <td style="text-align:right;font-weight:600;color:var(--danger);">+5.1%</td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="card-title">승인 처리</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="font-size:12px;color:var(--text-secondary);">6310 교육훈련비가 SOFT 권고 범위(+10%)를 초과(+14.9%)합니다. 사유를 확인한 후 승인 또는 반려 처리하세요.</div>
+              <textarea style="font-size:12px;padding:8px;border:0.5px solid var(--border);border-radius:var(--radius-sm);resize:none;width:100%;height:60px;font-family:inherit;" placeholder="승인 의견 또는 반려 사유를 입력하세요."></textarea>
+              <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button class="btn btn-ghost" onclick="alert('반려 처리 완료. 담당자에게 반려 사유 통보.')">반려</button>
+                <button class="btn btn-primary" onclick="alert('승인 완료. 마감 후 SAC Planning으로 이관 예정.')">승인 처리 →</button>
+                <button class="btn" style="background:#1d9e75;color:#fff;border-color:#1d9e75;" onclick="alert('마감 처리 완료. SAC Planning Data Action 실행 시작.')">마감 및 SAC 이관 →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end page-container -->
+
+<script>
+// ── Nav active state ──
+function setActive(el) {
+  document.querySelectorAll('.global-nav a').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── Panel tab switching ──
+function switchPanelTab(btn, targetId) {
+  btn.closest('.addin-panel').querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.panel-tab-content').forEach(p => p.classList.remove('active'));
+  document.getElementById(targetId).classList.add('active');
+}
+
+// ── Excel grid data ──
+const ACCOUNTS = [
+  { code: '6110', name: '급여',
+    actual: [8200,8200,8200,8200,8200,16400,8200,8200,8200,8200,8200,16400],
+    plan:   [8600,8600,8600,8600,8600,17200,8600,8600,8600,8600,8600,17200],
+    hard: true, limit: null, limitPct: 5.0 },
+  { code: '6210', name: '복리후생비',
+    actual: [3800,3900,4000,3800,4100,4200,3900,4000,4100,3800,3900,4500],
+    plan:   [3900,4000,4100,3900,4200,4300,4000,4100,4200,3900,4000,4600],
+    hard: true, limit: 50000 },
+  { code: '6310', name: '교육훈련비',
+    actual: [120,80,200,100,150,80,120,200,150,100,80,220],
+    plan:   [130,88,220,110,165,88,132,300,165,110,88,242],
+    hard: false, limit: 20000 },
+  { code: '6410', name: '접대비',
+    actual: [280,310,290,250,300,410,280,290,300,350,280,460],
+    plan:   [280,310,290,250,300,410,280,290,300,350,280,1460],
+    hard: true, limit: 10000 },
+  { code: '6510', name: '여비교통비',
+    actual: [200,180,250,220,230,180,210,250,220,200,180,280],
+    plan:   [210,189,263,231,242,189,221,263,231,210,189,294],
+    hard: false, limitPct: 5.0 },
+];
+
+function sum(arr) { return arr.reduce((a,b)=>a+b,0); }
+function fmt(n) { return n.toLocaleString(); }
+
+function buildGrid() {
+  const tbody = document.getElementById('excel-tbody');
+  tbody.innerHTML = '';
+  ACCOUNTS.forEach((acct, ai) => {
+    const actualTotal = sum(acct.actual);
+    const planTotal = sum(acct.plan);
+    const hasError = acct.hard && acct.limit && planTotal > acct.limit;
+    const hasWarn = !acct.hard && acct.limit && planTotal > acct.limit;
+
+    // Actual row
+    const trA = document.createElement('tr');
+    trA.className = 'row-actual';
+    trA.innerHTML = `
+      <td class="row-head">${acct.code}</td>
+      <td class="acct-name">${acct.name}</td>
+      <td class="type-cell">전년실적</td>
+      ${acct.actual.map(v=>`<td style="text-align:right;color:#888;">${fmt(v)}</td>`).join('')}
+      <td class="cell-total">${fmt(actualTotal)}</td>
+    `;
+    tbody.appendChild(trA);
+
+    // Plan row
+    const trP = document.createElement('tr');
+    trP.className = 'row-plan';
+    trP.setAttribute('data-ai', ai);
+    let planCells = acct.plan.map((v, mi) => {
+      const isLastWithError = hasError && mi === 11;
+      const cls = isLastWithError ? 'cell-error' : 'data';
+      return `<td class="${cls}"><input class="excel-input" data-ai="${ai}" data-mi="${mi}" type="number" value="${v}" onchange="updateCell(this)"></td>`;
+    }).join('');
+    const totalCls = hasError ? 'cell-total-err' : (hasWarn ? 'cell-total-warn' : 'cell-total');
+    const totalSuffix = hasError ? ' ✗' : (hasWarn ? ' △' : '');
+    trP.innerHTML = `
+      <td></td>
+      <td></td>
+      <td class="type-cell" style="color:var(--navy);">계획입력</td>
+      ${planCells}
+      <td class="${totalCls}" id="total-${ai}">${fmt(planTotal)}${totalSuffix}</td>
+    `;
+    tbody.appendChild(trP);
+  });
+}
+
+function updateCell(input) {
+  const ai = parseInt(input.getAttribute('data-ai'));
+  const mi = parseInt(input.getAttribute('data-mi'));
+  ACCOUNTS[ai].plan[mi] = parseFloat(input.value) || 0;
+  const planTotal = sum(ACCOUNTS[ai].plan);
+  const acct = ACCOUNTS[ai];
+  const hasError = acct.hard && acct.limit && planTotal > acct.limit;
+  const hasWarn = !acct.hard && acct.limit && planTotal > acct.limit;
+  const totalEl = document.getElementById(`total-${ai}`);
+  totalEl.className = hasError ? 'cell-total-err' : (hasWarn ? 'cell-total-warn' : 'cell-total');
+  totalEl.textContent = fmt(planTotal) + (hasError ? ' ✗' : hasWarn ? ' △' : '');
+}
+
+// ── AI draft ──
+function runAI() {
+  const prompt = document.getElementById('ai-prompt').value || '전년 실적 기반 5% 성장, 계절성 유지, 제약 조건 준수';
+  const resultEl = document.getElementById('ai-result');
+  resultEl.style.display = 'block';
+  resultEl.textContent = '생성 중...';
+  setTimeout(() => {
+    resultEl.innerHTML = `✅ <strong>AI 초안 생성 완료</strong><br>
+    프롬프트: "${prompt}"<br><br>
+    · 전년 실적 기반 +5.0% 성장률 적용<br>
+    · 6/12월 계절성 패턴(2배 비중) 보존<br>
+    · 6410 접대비: 상한(1,000만원) 맞춰 자동 조정<br>
+    · 6310 교육훈련비: +10% 권고 범위 내 조정<br><br>
+    <button class="btn btn-primary btn-sm" onclick="applyAIDraft()">초안 적용 →</button>`;
+  }, 1200);
+}
+
+function applyAIDraft() {
+  // apply safe plan (접대비 상한 조정)
+  ACCOUNTS[3].plan = ACCOUNTS[3].actual.map(v => Math.round(v * 0.9));
+  buildGrid();
+  alert('AI 초안이 적용되었습니다. 검토 후 수정 가능합니다.');
+}
+
+// ── Submit ──
+function submitPlan() {
+  const errors = ACCOUNTS.filter(a => a.hard && a.limit && sum(a.plan) > a.limit);
+  if (errors.length > 0) {
+    alert(`❌ 제출 불가\n\nHARD 제약 위반 계정:\n${errors.map(e=>e.name).join(', ')}\n\n해당 항목을 수정한 후 다시 제출하세요.`);
+  } else {
+    if (confirm('제출하시겠습니까?\n\n제출 이후에는 수정이 불가합니다.')) {
+      alert('✅ 비용계획이 제출되었습니다.\n승인자에게 검토 요청이 발송되었습니다.');
+    }
+  }
+}
+
+// ── Mermaid ERD ──
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: 'Pretendard, Apple SD Gothic Neo, sans-serif',
+  themeVariables: {
+    fontSize: '12px',
+    lineColor: '#73726c',
+    textColor: '#3d3d3a',
+    primaryColor: '#e6f0fb',
+    primaryBorderColor: '#003366',
+    primaryTextColor: '#003366',
+  }
+});
+
+const erdDef = `erDiagram
+  ORG_UNIT {
+    string org_id PK
+    string org_name
+    string parent_org_id FK
+    string org_level
+  }
+  USER_MASTER {
+    string user_id PK
+    string user_name
+    string org_id FK
+    string role_cd
+    string status
+  }
+  COST_ACCT {
+    string acct_cd PK
+    string acct_name
+    string acct_grp
+    boolean is_active
+  }
+  PLAN_VERSION {
+    string version_id PK
+    string version_nm
+    string fiscal_year
+    date input_start_dt
+    date input_end_dt
+    string status
+  }
+  PLAN_SCHEDULE {
+    string sched_id PK
+    string version_id FK
+    string org_id FK
+    date due_dt
+    string status
+    string approver_id FK
+  }
+  COST_GUIDELINE {
+    string guideline_id PK
+    string version_id FK
+    string acct_cd FK
+    decimal upper_limit
+    decimal lower_limit
+    decimal growth_rate
+    string constraint_type
+  }
+  COST_PLAN {
+    string plan_id PK
+    string version_id FK
+    string org_id FK
+    string user_id FK
+    string acct_cd FK
+    string period
+    decimal plan_amt
+    string status
+    datetime submitted_at
+    string approved_by FK
+  }
+  COST_ACTUAL {
+    string actual_id PK
+    string org_id FK
+    string acct_cd FK
+    string fiscal_year
+    string period
+    decimal actual_amt
+  }
+  APPROVAL_HIST {
+    string hist_id PK
+    string plan_id FK
+    string action_cd
+    string actor_id FK
+    datetime action_dt
+    string comment
+  }
+  PLAN_VERSION ||--o{ PLAN_SCHEDULE : "일정 설정"
+  PLAN_VERSION ||--o{ COST_GUIDELINE : "가이드라인 정의"
+  PLAN_VERSION ||--o{ COST_PLAN : "포함"
+  ORG_UNIT ||--o{ PLAN_SCHEDULE : "배정"
+  ORG_UNIT ||--o{ COST_PLAN : "소속"
+  ORG_UNIT ||--o{ COST_ACTUAL : "실적"
+  USER_MASTER ||--o{ COST_PLAN : "입력"
+  COST_ACCT ||--o{ COST_GUIDELINE : "제약"
+  COST_ACCT ||--o{ COST_PLAN : "분류"
+  COST_ACCT ||--o{ COST_ACTUAL : "기록"
+  COST_PLAN ||--o{ APPROVAL_HIST : "이력"
+`;
+
+mermaid.render('erd-main', erdDef).then(({svg}) => {
+  document.getElementById('erd-svg-wrap').innerHTML = svg;
+}).catch(err => {
+  document.getElementById('erd-svg-wrap').innerHTML = '<p style="padding:20px;color:#888;font-size:12px;">ERD 렌더링 중... 잠시 후 새로고침 해주세요.</p>';
+});
+
+// ── Init ──
+buildGrid();
+
+// ── Scroll spy for nav ──
+const sections = ['s1','s2','s3','s4','s5','s6','s7'];
+window.addEventListener('scroll', () => {
+  let current = sections[0];
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top < 100) current = id;
+  });
+  document.querySelectorAll('.global-nav a').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+</script>
+</body>
+</html>
