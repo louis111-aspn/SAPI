@@ -222,8 +222,8 @@
   .btn-link { font-size: 11px; color: var(--navy); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; }
 
   /* ─── SAPI Excel Add-in ─── */
-  .addin-layout { display: grid; grid-template-columns: 1fr 280px; }
-  .excel-pane { border-right: 0.5px solid var(--border); }
+  .addin-layout { display: flex; align-items: stretch; min-height: 600px; }
+  .excel-pane { border-right: 0.5px solid var(--border); flex: 1; min-width: 0; }
   .excel-toolbar {
     background: var(--navy);
     padding: 8px 14px;
@@ -262,12 +262,13 @@
   td.data { text-align: right; }
 
   /* Addin Side Panel */
-  .addin-panel { display: flex; flex-direction: column; }
-  .panel-tab-row { display: flex; border-bottom: 1px solid var(--border); background: var(--bg-secondary); }
+  .addin-panel { display: flex; flex-direction: column; width: 300px; flex-shrink: 0; height: 100%; }
+  .addin-panel .panel-footer { flex-shrink: 0; }
+  .panel-tab-row { display: flex; border-bottom: 1px solid var(--border); background: var(--bg-secondary); flex-shrink: 0; }
   .panel-tab { flex: 1; font-size: 11px; padding: 8px 0; text-align: center; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-secondary); background: none; border-top: none; border-left: none; border-right: none; }
   .panel-tab:hover { color: var(--navy); }
   .panel-tab.active { color: var(--navy); border-bottom-color: var(--navy); font-weight: 600; background: var(--bg-white); }
-  .panel-body { padding: 14px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .panel-body { padding: 14px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
   .panel-tab-content { display: none; flex-direction: column; gap: 10px; }
   .panel-tab-content.active { display: flex; }
 
@@ -322,8 +323,8 @@
     .sidebar-section { display: none; }
     .sidebar-item { padding: 6px 12px; border-radius: var(--radius-sm); }
     .kpi-row { grid-template-columns: repeat(2, 1fr); }
-    .addin-layout { grid-template-columns: 1fr; }
-    .addin-panel { border-top: 0.5px solid var(--border); }
+    .addin-layout { flex-direction: column; }
+    .addin-panel { width: 100%; border-top: 0.5px solid var(--border); }
   }
   @media (max-width: 600px) {
     .page-container { padding: 16px 12px 60px; }
@@ -892,7 +893,7 @@
         <div class="section-subtitle">개별 담당자 사용 · 전년 실적 조회 + 계획 입력 + 가이드라인 실시간 검증 + AI 초안 생성</div>
       </div>
     </div>
-    <div class="section-body">
+    <div class="section-body" style="overflow:visible;">
       <div class="action-title">전년 실적(READ) 행과 계획 입력(WRITE) 행을 계정별로 쌍으로 배치하여 YoY 비교를 즉시 가능하게 하며, HARD 제약 위반 시 셀 즉시 차단 처리함</div>
 
       <div class="addin-layout">
