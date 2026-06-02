@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAC BOM 전개 전략 분석 — EASY PLAN 2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #003366;
+    --navy-mid: #004080;
+    --navy-light: #e8eef5;
+    --gray-dark: #333333;
+    --gray-mid: #666666;
+    --gray-light: #f4f6f9;
+    --gray-border: #d0d8e4;
+    --correct: #1a6e3c;
+    --correct-bg: #eaf4ee;
+    --wrong: #8b1a1a;
+    --wrong-bg: #f9eaea;
+    --warn: #7a5200;
+    --warn-bg: #fff8e6;
+    --white: #ffffff;
+    --body-bg: #f0f3f8;
+    --radius: 2px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--body-bg);
+    color: var(--gray-dark);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+
+  /* HEADER */
+  .site-header {
+    background: var(--navy);
+    color: white;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 3px solid #001a33;
+  }
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+  .header-logo {
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.7);
+  }
+  .header-logo span { color: white; }
+  .header-nav {
+    display: flex;
+    gap: 0;
+    list-style: none;
+  }
+  .header-nav a {
+    display: block;
+    padding: 0 1rem;
+    height: 56px;
+    line-height: 56px;
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: color 0.15s, background 0.15s;
+    white-space: nowrap;
+  }
+  .header-nav a:hover { color: white; background: rgba(255,255,255,0.08); }
+
+  /* HERO */
+  .hero {
+    background: var(--navy);
+    color: white;
+    padding: 5rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.015) 0px,
+      rgba(255,255,255,0.015) 1px,
+      transparent 1px,
+      transparent 80px
+    );
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .hero-tag {
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .hero-tag::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 2px;
+    background: rgba(255,255,255,0.4);
+  }
+  .hero-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 400;
+    line-height: 1.25;
+    margin-bottom: 1.2rem;
+    color: white;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: rgba(255,255,255,0.75);
+  }
+  .hero-sub {
+    font-size: 15px;
+    color: rgba(255,255,255,0.65);
+    max-width: 600px;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .hero-meta-item {
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.06em;
+  }
+  .hero-meta-item strong {
+    display: block;
+    font-size: 13px;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 2px;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  /* STICKY TABS */
+  .tabs-bar {
+    background: white;
+    border-bottom: 1px solid var(--gray-border);
+    position: sticky;
+    top: 56px;
+    z-index: 90;
+  }
+  .tabs-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs-inner::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    padding: 0 1.25rem;
+    height: 48px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-mid);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover { color: var(--navy); }
+  .tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
+
+  /* LAYOUT */
+  .page-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+  .sidebar {
+    position: sticky;
+    top: 116px;
+  }
+  .sidebar-nav { list-style: none; }
+  .sidebar-section {
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--gray-mid);
+    text-transform: uppercase;
+    padding: 1.2rem 0 0.4rem;
+    border-top: 1px solid var(--gray-border);
+    margin-top: 0.8rem;
+  }
+  .sidebar-section:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+  .sidebar-nav a {
+    display: block;
+    padding: 0.3rem 0;
+    color: var(--gray-mid);
+    text-decoration: none;
+    font-size: 13px;
+    line-height: 1.5;
+    transition: color 0.15s;
+    border-left: 2px solid transparent;
+    padding-left: 0.75rem;
+    margin-left: -0.75rem;
+  }
+  .sidebar-nav a:hover { color: var(--navy); }
+  .sidebar-nav a.active { color: var(--navy); border-left-color: var(--navy); font-weight: 500; }
+
+  /* CONTENT */
+  .content { min-width: 0; }
+  .section {
+    margin-bottom: 4rem;
+    scroll-margin-top: 116px;
+  }
+  .section-header {
+    background: var(--navy);
+    color: white;
+    padding: 1.2rem 1.5rem;
+    border-radius: var(--radius);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .section-num {
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.45);
+    margin-top: 3px;
+    white-space: nowrap;
+  }
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    line-height: 1.3;
+    color: white;
+  }
+  .section-title small {
+    display: block;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.55);
+    margin-top: 4px;
+    letter-spacing: 0;
+  }
+
+  /* CARDS */
+  .card {
+    background: white;
+    border: 1px solid var(--gray-border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    background: var(--navy);
+    border-radius: 1px;
+  }
+  .card p { font-size: 14px; line-height: 1.75; color: var(--gray-dark); margin-bottom: 0.5rem; }
+  .card p:last-child { margin-bottom: 0; }
+
+  /* CALLOUTS */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid;
+    font-size: 14px;
+    line-height: 1.75;
+  }
+  .callout-correct {
+    background: var(--correct-bg);
+    border-color: var(--correct);
+    color: var(--correct);
+  }
+  .callout-wrong {
+    background: var(--wrong-bg);
+    border-color: var(--wrong);
+    color: var(--wrong);
+  }
+  .callout-warn {
+    background: var(--warn-bg);
+    border-color: var(--warn);
+    color: var(--warn);
+  }
+  .callout strong { font-weight: 700; display: block; margin-bottom: 0.25rem; }
+
+  /* DATA TABLE */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 1rem;
+    background: white;
+    border: 1px solid var(--gray-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .data-table th {
+    background: var(--navy);
+    color: white;
+    font-weight: 500;
+    padding: 0.6rem 0.9rem;
+    text-align: left;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+  }
+  .data-table td {
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--gray-border);
+    color: var(--gray-dark);
+    vertical-align: top;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:nth-child(even) td { background: var(--gray-light); }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-ok { background: var(--correct-bg); color: var(--correct); }
+  .badge-no { background: var(--wrong-bg); color: var(--wrong); }
+  .badge-half { background: var(--warn-bg); color: var(--warn); }
+  .badge-navy { background: var(--navy-light); color: var(--navy); }
+
+  /* MATH BLOCK */
+  .math-block {
+    background: #1a1e2e;
+    color: #c9d1e3;
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    font-size: 12.5px;
+    line-height: 1.8;
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .math-block .c-green { color: #5cba74; }
+  .math-block .c-blue { color: #7eb8f7; }
+  .math-block .c-yellow { color: #e5c76b; }
+  .math-block .c-gray { color: #666e87; }
+  .math-block .c-red { color: #e07070; }
+
+  /* FLOW DIAGRAM */
+  .flow-diagram {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .flow-node {
+    flex: 1;
+    min-width: 120px;
+    background: white;
+    border: 1px solid var(--gray-border);
+    padding: 0.75rem 1rem;
+    font-size: 12px;
+    text-align: center;
+    position: relative;
+    color: var(--gray-dark);
+  }
+  .flow-node.navy { background: var(--navy); color: white; border-color: var(--navy); }
+  .flow-node.light { background: var(--navy-light); color: var(--navy); border-color: var(--navy-light); }
+  .flow-node-label {
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    font-size: 10px;
+    opacity: 0.6;
+    margin-bottom: 3px;
+  }
+  .flow-node-text { font-weight: 500; font-size: 12px; }
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    color: var(--gray-border);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  /* PATH DIAGRAM (vs 비교) */
+  .path-diagram {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .path-item {
+    background: white;
+    border: 1px solid var(--gray-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .path-header {
+    background: var(--gray-light);
+    padding: 0.6rem 1rem;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray-mid);
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .path-header.navy { background: var(--navy); color: white; }
+  .path-body { padding: 0.9rem 1rem; font-size: 13px; line-height: 1.7; }
+  .path-body li { margin-bottom: 0.3rem; padding-left: 0.5rem; list-style: none; }
+  .path-body li::before { content: '→ '; color: var(--navy); font-weight: 700; }
+
+  /* QUIZ CARD (결론/판단) */
+  .verdict-card {
+    background: var(--navy);
+    color: white;
+    border-radius: var(--radius);
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1rem;
+  }
+  .verdict-label {
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+  .verdict-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.15rem;
+    line-height: 1.5;
+    color: white;
+    font-weight: 400;
+  }
+
+  /* GRID */
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .mini-card {
+    background: white;
+    border: 1px solid var(--gray-border);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+  }
+  .mini-card-label {
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    font-size: 10px;
+    color: var(--gray-mid);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .mini-card-val {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-dark);
+    line-height: 1.5;
+  }
+  .mini-card-val.navy { color: var(--navy); }
+  .mini-card-val.wrong { color: var(--wrong); }
+  .mini-card-val.correct { color: var(--correct); }
+
+  /* ROADMAP */
+  .roadmap {
+    position: relative;
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--gray-border);
+    margin-bottom: 1rem;
+  }
+  .roadmap-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+    padding-left: 0.75rem;
+  }
+  .roadmap-item::before {
+    content: '';
+    position: absolute;
+    left: -1.65rem;
+    top: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--navy);
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px var(--navy);
+  }
+  .roadmap-phase {
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--navy);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+  .roadmap-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gray-dark);
+    margin-bottom: 0.3rem;
+  }
+  .roadmap-desc {
+    font-size: 13px;
+    color: var(--gray-mid);
+    line-height: 1.6;
+  }
+
+  /* CODE */
+  code {
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    font-size: 12px;
+    background: var(--gray-light);
+    border: 1px solid var(--gray-border);
+    padding: 1px 5px;
+    border-radius: 2px;
+    color: var(--navy);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .page-body { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .path-diagram { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .flow-diagram { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); padding: 4px 0; }
+  }
+
+  /* PRINT / FOOTER */
+  .page-footer {
+    background: var(--navy);
+    color: rgba(255,255,255,0.45);
+    text-align: center;
+    padding: 2rem;
+    font-family: 'JetBrains Mono', 'Noto Sans KR', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    margin-top: 2rem;
+  }
+  .page-footer span { color: rgba(255,255,255,0.7); }
+
+  .prose { font-size: 14px; line-height: 1.8; color: var(--gray-dark); margin-bottom: 1rem; }
+  h4 { font-size: 13px; font-weight: 700; color: var(--navy); margin: 1rem 0 0.5rem; }
+  hr.divider { border: none; border-top: 1px solid var(--gray-border); margin: 1.5rem 0; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-logo">ASPN · <span>BAC사업부 패키지 R&amp;D TF</span></div>
+    <nav>
+      <ul class="header-nav">
+        <li><a href="#problem">문제 정의</a></li>
+        <li><a href="#global">글로벌 프랙티스</a></li>
+        <li><a href="#options">선택지 분석</a></li>
+        <li><a href="#ai">AI 전략</a></li>
+        <li><a href="#impl">구현 방안</a></li>
+        <li><a href="#conclusion">결론</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">전략 분석 보고서</div>
+    <h1 class="hero-title">SAC BOM 전개 및<br><em>계획 수불부 전략</em></h1>
+    <p class="hero-sub">EASY PLAN 2.0이 직면한 핵심 과제 — BOM 전개와 계획 수불부를 어떻게 처리할 것인가에 대한 글로벌 프랙티스 검토, 선택지 분석, AI 기반 대안 전략의 실무적 구현 방안을 종합 정리합니다.</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item"><strong>대상 제품</strong>EASY PLAN 2.0 (DSP Seamless Planning)</div>
+      <div class="hero-meta-item"><strong>참조 고객</strong>국내 대기업 (복잡한 레시피 BOM)</div>
+      <div class="hero-meta-item"><strong>작성</strong>2026 · ASPN R&amp;D TF</div>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-bar">
+  <div class="tabs-inner">
+    <button class="tab-btn active" onclick="scrollToSection('problem')">01 문제 정의</button>
+    <button class="tab-btn" onclick="scrollToSection('global')">02 글로벌 프랙티스</button>
+    <button class="tab-btn" onclick="scrollToSection('options')">03 선택지 분석</button>
+    <button class="tab-btn" onclick="scrollToSection('ai')">04 AI 전략</button>
+    <button class="tab-btn" onclick="scrollToSection('impl')">05 구현 방안</button>
+    <button class="tab-btn" onclick="scrollToSection('conclusion')">06 결론</button>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="page-body">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <ul class="sidebar-nav">
+      <li class="sidebar-section">문제 인식</li>
+      <li><a href="#problem" class="active">SAC의 구조적 한계</a></li>
+      <li><a href="#gap">계획 수불부의 본질</a></li>
+      <li class="sidebar-section">외부 환경</li>
+      <li><a href="#global">글로벌 프랙티스</a></li>
+      <li><a href="#sap-strategy">SAP 공식 전략</a></li>
+      <li class="sidebar-section">선택지</li>
+      <li><a href="#options">아키텍처 옵션</a></li>
+      <li class="sidebar-section">대안 전략</li>
+      <li><a href="#ai">AI 활용 전략</a></li>
+      <li><a href="#impl">실무 구현</a></li>
+      <li class="sidebar-section">종합</li>
+      <li><a href="#conclusion">결론 및 제언</a></li>
+    </ul>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- 01 문제 정의 -->
+    <section class="section" id="problem">
+      <div class="section-header">
+        <div class="section-num">01</div>
+        <div class="section-title">SAC의 구조적 한계<small>왜 BOM 전개가 SAC에서 어려운가</small></div>
+      </div>
+
+      <p class="prose">SAP Analytics Cloud(SAC)는 <strong>다차원 OLAP 기반 집계 플랫폼</strong>으로 설계되었습니다. 사전 집계된 수치를 계획·분석하는 것이 핵심 철학이며, BOM 전개에 필요한 기능들이 구조적으로 결여되어 있습니다.</p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>필요 기능</th>
+            <th>SAC 지원</th>
+            <th>이유</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>재귀적 BOM 트리 탐색</td>
+            <td><span class="badge badge-no">불가</span></td>
+            <td>OLAP 모델은 계층 집계만 가능, parent→child 재귀 불가</td>
+          </tr>
+          <tr>
+            <td>품목별 소요량 역산 (MRP 로직)</td>
+            <td><span class="badge badge-no">불가</span></td>
+            <td>수식 엔진이 cell-by-cell 연산, 행간 의존관계 처리 불가</td>
+          </tr>
+          <tr>
+            <td>수불부 (입고/출고/이월 연결)</td>
+            <td><span class="badge badge-half">부분적</span></td>
+            <td>단순 누계는 가능하나 BOM 연동 소요량과의 실시간 연결 불가</td>
+          </tr>
+          <tr>
+            <td>공정 Lead Time 반영</td>
+            <td><span class="badge badge-no">불가</span></td>
+            <td>시간 축 이동 계산(time-shifted calc) 지원 매우 제한적</td>
+          </tr>
+          <tr>
+            <td>다단계 반제품 전개</td>
+            <td><span class="badge badge-no">불가</span></td>
+            <td>모델 구조상 최대 2~3 depth에서 실용적 한계 도달</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 계획 수불부의 본질 -->
+    <section class="section" id="gap">
+      <div class="section-header">
+        <div class="section-num">01-B</div>
+        <div class="section-title">계획 수불부의 본질<small>ERP에서 받을 수 없는 이유</small></div>
+      </div>
+
+      <div class="path-diagram">
+        <div class="path-item">
+          <div class="path-header">실적 수불부</div>
+          <div class="path-body">
+            <ul>
+              <li>이미 발생한 입출고 기록</li>
+              <li>ERP 실적 트랜잭션에서 추출 가능</li>
+              <li>확정된 과거 데이터</li>
+              <li>단일 시나리오</li>
+            </ul>
+          </div>
+        </div>
+        <div class="path-item">
+          <div class="path-header navy">계획 수불부</div>
+          <div class="path-body">
+            <ul>
+              <li>아직 발생하지 않은 미래 소요량</li>
+              <li><strong>ERP에 존재하지 않음</strong></li>
+              <li>사업계획 생산량 × BOM으로 산출</li>
+              <li>복수 시나리오 필요</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-warn">
+        <strong>핵심 딜레마</strong>
+        계획 수불부는 사업계획 툴 안에서 생산량 계획을 먼저 세우고, 그것을 BOM에 곱해서 산출해야 비로소 만들어지는 것입니다. ERP에서 가져올 수 없는 구조적 이유가 여기에 있습니다.
+      </div>
+
+      <div class="callout callout-wrong">
+        <strong>국내 대기업도 이 문제를 요구한다</strong>
+        국내 대기업도 SAC-P 도입 시 BOM 엔진을 요구합니다. 이는 SCM 툴 부재의 문제가 아니라, ERP MRP(확정 수주 기반)와 사업계획(가상 시나리오 기반) 수불부가 목적과 데이터 성격이 근본적으로 다르기 때문입니다.
+      </div>
+    </section>
+
+    <!-- 02 글로벌 프랙티스 -->
+    <section class="section" id="global">
+      <div class="section-header">
+        <div class="section-num">02</div>
+        <div class="section-title">글로벌 프랙티스<small>선진 기업들은 어떻게 처리하는가</small></div>
+      </div>
+
+      <div class="verdict-card">
+        <div class="verdict-label">핵심 결론</div>
+        <div class="verdict-text">글로벌 선진 기업들은 사업계획(FP&amp;A) 툴에서 BOM 전개와 수불부를 직접 구현하지 않습니다. 이 문제는 글로벌에서도 완전히 해결된 사례가 드뭅니다.</div>
+      </div>
+
+      <h4>글로벌 계획 시스템의 레이어 분리 원칙</h4>
+      <div class="flow-diagram">
+        <div class="flow-node light">
+          <div class="flow-node-label">재무계획 (FP&A)</div>
+          <div class="flow-node-text">SAC · Anaplan · OneStream</div>
+        </div>
+        <div class="flow-arrow">⇔</div>
+        <div class="flow-node navy">
+          <div class="flow-node-label">공급망 계획 (SCM)</div>
+          <div class="flow-node-text">SAP IBP · Kinaxis · o9</div>
+        </div>
+        <div class="flow-arrow">⇔</div>
+        <div class="flow-node light">
+          <div class="flow-node-label">실행/운영</div>
+          <div class="flow-node-text">SAP S/4 PP · ECC MRP</div>
+        </div>
+      </div>
+
+      <p class="prose">글로벌 FP&amp;A 툴 — Anaplan, OneStream, Adaptive Planning — 은 BOM 전개 엔진을 내장하지 않습니다. BOM 전개가 필요한 경우 글로벌 대기업은 세 가지 방식 중 하나를 선택합니다.</p>
+
+      <div class="grid-3">
+        <div class="mini-card">
+          <div class="mini-card-label">방식 ①</div>
+          <div class="mini-card-val">표준원가로 타협<br><small style="font-weight:400;color:var(--gray-mid)">매출수량 × 표준원가 테이블 직접 적용. BOM 전개 없이 재료비 산출.</small></div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-card-label">방식 ②</div>
+          <div class="mini-card-val">IBP 연계<br><small style="font-weight:400;color:var(--gray-mid)">S&amp;OP 툴이 BOM 전개 처리 → 집계 결과만 FP&A 툴로 전달.</small></div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-card-label">방식 ③</div>
+          <div class="mini-card-val">자체 개발<br><small style="font-weight:400;color:var(--gray-mid)">대기업 내부 IT가 BOM 전개 로직 개발 후 계획 시스템에 연동.</small></div>
+        </div>
+      </div>
+
+      <div class="callout callout-warn">
+        <strong>국내 시장의 구조적 특수성</strong>
+        국내 중견·대기업 대부분은 SCM 툴(IBP, Kinaxis 등)이 없습니다. 글로벌 기업은 SCM 툴이 이미 BOM을 처리하기 때문에 FP&amp;A 툴에서 중복 구현할 필요가 없는 구조입니다. 국내 고객의 요구는 예외가 아니라, SCM 시스템 부재를 사업계획 툴이 메우려는 현실적 요청입니다.
+      </div>
+    </section>
+
+    <!-- SAP 전략 -->
+    <section class="section" id="sap-strategy">
+      <div class="section-header">
+        <div class="section-num">02-B</div>
+        <div class="section-title">SAP 공식 전략<small>IBP + SAC 이원 구조와 그 공백</small></div>
+      </div>
+
+      <p class="prose">SAP의 공식 답은 IBP 단독이 아닌 <strong>IBP + SAC 이원 구조</strong>입니다.</p>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>시스템</th><th>역할</th><th>BOM 전개 담당</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>SAP IBP</code></td>
+            <td>운영계획 — 수요, 생산, 공급망, BOM 전개</td>
+            <td><span class="badge badge-ok">담당</span></td>
+          </tr>
+          <tr>
+            <td><code>SAP Analytics Cloud</code></td>
+            <td>재무계획 — 매출, 원가, P&amp;L, B/S, Cash Flow</td>
+            <td><span class="badge badge-no">미담당</span></td>
+          </tr>
+          <tr>
+            <td><code>SAP Datasphere</code></td>
+            <td>데이터 통합·거버넌스</td>
+            <td><span class="badge badge-no">미담당</span></td>
+          </tr>
+          <tr>
+            <td><code>SAP S/4HANA</code></td>
+            <td>실적·마스터 데이터 소스</td>
+            <td><span class="badge badge-half">MRP (실행용)</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-wrong">
+        <strong>SAP 전략의 공백</strong>
+        IBP를 도입하지 않은 고객 — 국내 중견·대기업 대부분 — 에 대한 SAP의 답이 없습니다. SAP 스스로도 IBP 없이 BOM 전개를 해결하지 못합니다. EASY PLAN이 이 공백을 노리는 것이 시장 기회입니다.
+      </div>
+
+      <div class="callout callout-warn">
+        <strong>IBP는 S&amp;OP 특화 솔루션</strong>
+        IBP의 핵심 강점은 월 단위 공급망 운영계획(수요계획, S&amp;OP, 재고최적화)입니다. 국내 제조업의 연간 사업계획(Annual Operating Plan)과는 계획 주기, 담당 조직, 목적이 다릅니다. IBP는 연간 사업계획의 직접적 대안이 되기 어렵습니다.
+      </div>
+    </section>
+
+    <!-- 03 선택지 분석 -->
+    <section class="section" id="options">
+      <div class="section-header">
+        <div class="section-num">03</div>
+        <div class="section-title">선택지 분석<small>아키텍처 옵션별 현실적 평가</small></div>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>옵션</th>
+            <th>기술 가능성</th>
+            <th>비용</th>
+            <th>ERP 리스크</th>
+            <th>판정</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>SAC Data Action 유사 BOM 로직</td>
+            <td>단층 BOM 한정</td>
+            <td>낮음</td>
+            <td>없음</td>
+            <td><span class="badge badge-no">패키지 불가</span></td>
+          </tr>
+          <tr>
+            <td>SAC Custom Widget BOM 엔진</td>
+            <td>기술적 가능</td>
+            <td>개발비 높음</td>
+            <td>없음</td>
+            <td><span class="badge badge-no">TCO 비효율</span></td>
+          </tr>
+          <tr>
+            <td>HANA Cloud 별도 인스턴스</td>
+            <td>최적</td>
+            <td><strong>매우 높음</strong></td>
+            <td>없음</td>
+            <td><span class="badge badge-no">중견기업 불가</span></td>
+          </tr>
+          <tr>
+            <td>S/4 HANA 공유 활용</td>
+            <td>높음</td>
+            <td>낮음</td>
+            <td><strong>심각</strong></td>
+            <td><span class="badge badge-no">ERP 안정성 위험</span></td>
+          </tr>
+          <tr>
+            <td>SAP IBP 연계</td>
+            <td>높음</td>
+            <td>IBP 라이선스 추가</td>
+            <td>없음</td>
+            <td><span class="badge badge-no">대기업 한정</span></td>
+          </tr>
+          <tr>
+            <td>Excel 브릿지 (임시)</td>
+            <td>높음</td>
+            <td>낮음</td>
+            <td>없음</td>
+            <td><span class="badge badge-half">단기 브릿지</span></td>
+          </tr>
+          <tr>
+            <td><strong>BTP 경량 엔진 + AI 오케스트레이션</strong></td>
+            <td>높음</td>
+            <td>중간</td>
+            <td>없음</td>
+            <td><span class="badge badge-ok">중장기 유력</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-wrong">
+        <strong>S/4 HANA 공유 사용의 구조적 위험</strong>
+        연간 사업계획용 BOM 전개는 배치성 대용량 연산입니다. ERP의 OLTP 워크로드와 성격이 충돌하며, HANA 메모리 대량 점유 → ERP 트랜잭션 응답 지연 → 생산/구매/물류 실시간 처리 영향 → 최악의 경우 HANA 인스턴스 다운이 발생할 수 있습니다. SAP도 이 구성을 권장하지 않습니다.
+      </div>
+
+      <div class="verdict-card">
+        <div class="verdict-label">전략적 결론</div>
+        <div class="verdict-text">기술적으로 안전하고, 비용도 합리적이고, 성능도 충분하고, 모든 고객에게 적용 가능한 BOM 전개 아키텍처는 현재 존재하지 않습니다. ABAP 기반 Add-on 방식이 시장에서 살아남는 이유는 해법이 완벽해서가 아니라 대안이 없기 때문입니다.</div>
+      </div>
+    </section>
+
+    <!-- 04 AI 전략 -->
+    <section class="section" id="ai">
+      <div class="section-header">
+        <div class="section-num">04</div>
+        <div class="section-title">AI 활용 전략<small>BOM 전개 문제를 AI로 우회·보완한다</small></div>
+      </div>
+
+      <div class="verdict-card">
+        <div class="verdict-label">전략적 전환점</div>
+        <div class="verdict-text">경쟁 구도를 바꿉니다. "BOM 전개 엔진을 누가 더 잘 만드는가"에서 "BOM 없이도 재료비 계획을 얼마나 정확하게 낼 수 있는가"로 — EASY PLAN만의 새로운 게임.</div>
+      </div>
+
+      <h4>전략 1 — AI 기반 재료비 Driver 예측 (BOM 전개 우회)</h4>
+      <div class="card">
+        <div class="card-title">실적 데이터 학습으로 소요량 직접 예측</div>
+        <div class="math-block"><span class="c-green">학습 데이터:</span> 과거 3~5년 생산량 실적 + 실제 재료비 실적
+    ↓
+<span class="c-blue">ML 모델:</span> 생산량 → 품목군별 재료 소요량 예측
+    ↓
+<span class="c-yellow">출력:</span> 계획 생산량 입력 시 → 재료별 소요량·금액 자동 산출
+         + 예측 신뢰구간 (±%)</div>
+        <p>BOM 구조를 명시적으로 전개하지 않아도, 과거 실적 패턴에서 생산량-재료비 관계를 학습해서 예측합니다. 과거 실적이 충분히 쌓인 대기업에서 오히려 BOM 전개보다 더 정확할 수 있습니다.</p>
+      </div>
+
+      <h4>전략 2 — 경량 BOM 전개 엔진 + Claude AI 오케스트레이션</h4>
+      <div class="card">
+        <div class="card-title">AI가 전후를 담당, 연산은 경량 엔진</div>
+        <div class="math-block"><span class="c-green">[사용자]</span> "내년 매출계획 기준으로 재료비 시나리오 3개 만들어줘"
+    ↓
+<span class="c-blue">[Claude AI]</span>
+  ① 매출계획 → 생산계획 변환 로직 판단
+  ② BOM 전개 범위·깊이 결정 (전체 vs 주요 품목)
+  ③ 경량 BOM 전개 엔진 API 호출
+  ④ 결과 해석 + 이상값 감지
+  ⑤ 시나리오별 재료비 차이 설명 생성
+    ↓
+<span class="c-yellow">[출력]</span> 계획 수불부 + 재료비계획 + 자연어 해설 보고서</div>
+      </div>
+
+      <h4>전략 3 — 유사 BOM 기반 신제품 재료비 추정</h4>
+      <div class="card">
+        <div class="card-title">기존 시스템이 전혀 해결하지 못하는 영역</div>
+        <p>신제품 X의 BOM이 아직 확정되지 않은 경우, AI가 기존 유사 제품의 BOM 패턴에서 신제품 X의 예상 소요량을 추정합니다. 담당자가 검토·수정 후 사업계획에 반영하는 방식으로, BOM 전개 엔진과 AI의 조합이 만드는 완전히 새로운 기능입니다.</p>
+      </div>
+    </section>
+
+    <!-- 06 구현 방안 -->
+    <section class="section" id="impl">
+      <div class="section-header">
+        <div class="section-num">05</div>
+        <div class="section-title">실무 구현 방안<small>BTP 경량 엔진 + Claude AI 오케스트레이션</small></div>
+      </div>
+
+      <h4>전체 아키텍처</h4>
+      <div class="math-block"><span class="c-green">┌─────────────────────────────────────────────┐</span>
+<span class="c-green">│           SAC / DSP 화면 (사용자)            │</span>
+<span class="c-green">│  [매출계획 입력]  [시나리오 선택]  [실행]      │</span>
+<span class="c-green">└──────────────────┬──────────────────────────┘</span>
+                   │ API 호출
+                   ▼
+<span class="c-blue">┌─────────────────────────────────────────────┐</span>
+<span class="c-blue">│         Claude AI 오케스트레이션 레이어       │</span>
+<span class="c-blue">│  · 사용자 의도 파악 / 생산계획 변환 판단      │</span>
+<span class="c-blue">│  · BOM 전개 범위 결정 / 이상값 감지          │</span>
+<span class="c-blue">│  · 자연어 보고서 생성                        │</span>
+<span class="c-blue">└──────────────────┬──────────────────────────┘</span>
+                   │
+<span class="c-yellow">┌─────────────────────────────────────────────┐</span>
+<span class="c-yellow">│         BTP Cloud Foundry                   │</span>
+<span class="c-yellow">│  ┌──────────────┐  ┌─────────────────────┐  │</span>
+<span class="c-yellow">│  │ BOM 전개 엔진│  │ ML 재료비 예측 모델 │  │</span>
+<span class="c-yellow">│  │  (Python)   │  │  (scikit-learn/XGB) │  │</span>
+<span class="c-yellow">│  └──────┬───────┘  └──────────┬──────────┘  │</span>
+<span class="c-yellow">│         └────────┬────────────┘             │</span>
+<span class="c-yellow">│  ┌───────────────▼──────────────────────┐   │</span>
+<span class="c-yellow">│  │   계획 BOM 마스터 (HANA Cloud 소형)  │   │</span>
+<span class="c-yellow">│  └──────────────────────────────────────┘   │</span>
+<span class="c-yellow">└──────────────────┬──────────────────────────┘</span>
+                   │ Write-back
+                   ▼
+<span class="c-green">┌─────────────────────────────────────────────┐</span>
+<span class="c-green">│         SAC / DSP 계획 모델                  │</span>
+<span class="c-green">│  계획 수불부 → 재료비계획 → 원가 → P&L       │</span>
+<span class="c-green">└─────────────────────────────────────────────┘</span></div>
+
+      <h4>계획 BOM 개념 — 핵심 설계 원칙</h4>
+      <div class="path-diagram">
+        <div class="path-item">
+          <div class="path-header">ERP BOM (실행용)</div>
+          <div class="path-body" style="font-family:'JetBrains Mono','Noto Sans KR',monospace;font-size:12px;color:#333;">
+            완제품 A<br>
+            ├ 반제품 B (수율 98%)<br>
+            │ ├ 원료 C (0.523kg/ea)<br>
+            │ ├ 원료 D (0.112kg/ea)<br>
+            │ └ 부재료 E (0.034kg/ea)<br>
+            └ 포장재 F (1ea)
+          </div>
+        </div>
+        <div class="path-item">
+          <div class="path-header navy">계획 BOM (사업계획용)</div>
+          <div class="path-body" style="font-family:'JetBrains Mono','Noto Sans KR',monospace;font-size:12px;color:#333;">
+            완제품 A<br>
+            ├ 주원료군 (C+D 합산)<br>
+            │ 0.635kg/ea<br>
+            └ 부자재군 (E+F 합산)<br>
+            &nbsp; 단가 기준 처리
+          </div>
+        </div>
+      </div>
+      <p class="prose" style="font-size:13px;color:var(--gray-mid);">레벨과 품목 수를 줄이면 연산량이 기하급수적으로 감소합니다. ERP BOM의 완전한 복제가 아닌 "계획 BOM"으로 충분하며, 이것이 ERP 리스크 없이 경량 구현이 가능한 핵심입니다.</p>
+
+      <h4>BOM 전개 엔진 핵심 코드 (Python)</h4>
+      <div class="math-block"><span class="c-blue">def</span> <span class="c-green">explode_bom</span>(product_plan: dict, bom_master: dict) -> dict:
+    <span class="c-gray">"""
+    product_plan : {제품코드: {월: 생산계획량}}
+    bom_master   : {제품코드: [{원료코드, 소요량, 단위}]}
+    return       : {원료코드: {월: 소요량}}
+    """</span>
+    result = {}
+    <span class="c-blue">for</span> product, monthly_plan <span class="c-blue">in</span> product_plan.items():
+        bom = bom_master.get(product, [])
+        <span class="c-blue">for</span> component <span class="c-blue">in</span> bom:
+            mat_code = component[<span class="c-yellow">'material_code'</span>]
+            qty_per  = component[<span class="c-yellow">'quantity_per'</span>]
+            <span class="c-blue">if</span> mat_code <span class="c-blue">not in</span> result:
+                result[mat_code] = {}
+            <span class="c-blue">for</span> month, plan_qty <span class="c-blue">in</span> monthly_plan.items():
+                result[mat_code][month] = (
+                    result[mat_code].get(month, <span class="c-yellow">0</span>) + plan_qty * qty_per
+                )
+    <span class="c-blue">return</span> result
+
+<span class="c-gray"># 수만 SKU × 12개월 → 수초 내 처리 (ABAP 대비 압도적 성능)</span></div>
+
+      <h4>구현 로드맵</h4>
+      <div class="roadmap">
+        <div class="roadmap-item">
+          <div class="roadmap-phase">Phase 1 · 3개월</div>
+          <div class="roadmap-title">기반 구축</div>
+          <div class="roadmap-desc">계획 BOM 마스터 설계 및 데이터 이관 도구 / BTP Cloud Foundry Python 경량 BOM 전개 엔진 / SAC Write-back 연동. Phase 1만 완성해도 ERP 분리 안전성과 성능 두 가지 차별화 포인트 확보.</div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-phase">Phase 2 · 3개월</div>
+          <div class="roadmap-title">AI 통합</div>
+          <div class="roadmap-desc">Claude AI 오케스트레이션 레이어 / 자연어 수불부 분석·해설 / 이상값 감지·알림. SAC Widget 기반 Claude 연동 기존 자산 활용.</div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-phase">Phase 3 · 6개월</div>
+          <div class="roadmap-title">고도화</div>
+          <div class="roadmap-desc">ML 기반 재료비 예측 모델 (실적 학습) / 유사 BOM 신제품 추정 / 시나리오 자동 생성. 사용자 경험 차별화 완성.</div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-phase">EASY PLAN 3.0</div>
+          <div class="roadmap-title">DSP 완전 내재화</div>
+          <div class="roadmap-desc">DSP HANA Cloud 기반 BOM 전개 정식 내재화. 국내 제조업 대상 강력한 차별화 포인트로 포지셔닝. 글로벌 시장 확장 가능성.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 결론 -->
+    <section class="section" id="conclusion">
+      <div class="section-header">
+        <div class="section-num">06</div>
+        <div class="section-title">종합 결론 및 제언<small>EASY PLAN 2.0의 전략적 방향</small></div>
+      </div>
+
+      <div class="verdict-card">
+        <div class="verdict-label">핵심 판단</div>
+        <div class="verdict-text">BOM 전개·계획 수불부는 글로벌에서도 표준 솔루션이 없는 영역입니다. 중견기업도 대기업도 Excel 또는 자체 개발로 메우고 있습니다. EASY PLAN이 이것을 패키지로 해결한다면 글로벌 경쟁 제품 대비 실질적 차별화입니다.</div>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>평가 기준</th><th>SAC 내재화 개발</th><th>BTP 경량엔진 + AI</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>기술적 실현 가능성</td>
+            <td><span class="badge badge-no">낮음 (구조적 한계)</span></td>
+            <td><span class="badge badge-ok">높음</span></td>
+          </tr>
+          <tr>
+            <td>ERP 안정성 리스크</td>
+            <td>없음</td>
+            <td><span class="badge badge-ok">없음 (ERP 분리)</span></td>
+          </tr>
+          <tr>
+            <td>비용 (고객 TCO)</td>
+            <td><span class="badge badge-half">개발비 높음</span></td>
+            <td><span class="badge badge-half">BTP 중간 수준</span></td>
+          </tr>
+          <tr>
+            <td>패키지 유지보수성</td>
+            <td><span class="badge badge-no">매우 낮음</span></td>
+            <td><span class="badge badge-ok">높음</span></td>
+          </tr>
+          <tr>
+            <td>DSP 2.0 전환 연속성</td>
+            <td><span class="badge badge-no">낮음 (SAC 종속)</span></td>
+            <td><span class="badge badge-ok">높음 (재사용 가능)</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="grid-2">
+        <div class="callout callout-correct">
+          <strong>단기 전략 (EASY PLAN 1.0 / SAC 구간)</strong>
+          BOM 전개·수불부는 Scope 외부 영역으로 명시적 경계 설정. Excel 브릿지로 현장 대응. BTP 경량 엔진 R&amp;D 착수.
+        </div>
+        <div class="callout callout-correct">
+          <strong>중장기 전략 (EASY PLAN 2.0 / DSP)</strong>
+          BTP Python 경량 엔진 + Claude AI 오케스트레이션으로 패키지 차별화 자산화. 국내 제조업 표준 솔루션으로 포지셔닝.
+        </div>
+      </div>
+
+      <div class="callout callout-warn">
+        <strong>R&amp;D TF 핵심 과제</strong>
+        문제는 "구현할 것인가"가 아니라 "언제, 어떤 아키텍처로, 어디까지 구현할 것인가"입니다. 계획 BOM 설계 원칙 확립 → BTP 경량 엔진 PoC → Claude AI 오케스트레이션 통합의 순서로 단계적 R&amp;D 로드맵 실행이 필요합니다.
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <span>ASPN</span> · BAC사업부 패키지 R&amp;D TF · EASY PLAN 2.0 전략 분석 · 2026
+</footer>
+
+<script>
+  function scrollToSection(id) {
+    document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+  }
+
+  const tabs = document.querySelectorAll('.tab-btn');
+  tabs.forEach(btn => {
+    btn.addEventListener('click', function() {
+      tabs.forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  const sections = document.querySelectorAll('.section');
+  const sideLinks = document.querySelectorAll('.sidebar-nav a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        sideLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === '#' + entry.target.id) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
