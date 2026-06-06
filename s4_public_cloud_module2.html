@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 2 — SAC로 CO 비용 통제를 가시화하고 계획화하는 방법</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #003366;
+  --navy-light: #e8eef5;
+  --gray-dark: #333333;
+  --gray-mid: #666666;
+  --gray-light: #f4f6f9;
+  --gray-border: #d0d8e4;
+  --bg: #f0f3f8;
+  --white: #ffffff;
+  --correct: #1a6e3c;
+  --correct-bg: #e8f5ee;
+  --wrong: #8b1a1a;
+  --wrong-bg: #faeaea;
+  --warn: #7a5200;
+  --warn-bg: #fff8e6;
+  --font-serif: 'DM Serif Display', serif;
+  --font-sans: 'Noto Sans KR', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Noto Sans KR', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); font-size: 15px; color: var(--gray-dark); background: var(--bg); line-height: 1.7; }
+
+/* HEADER */
+.header { background: var(--navy); color: var(--white); padding: 48px 64px 40px; }
+.header-label { font-family: var(--font-mono); font-size: 13px; color: rgba(255,255,255,0.55); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 14px; }
+.header h1 { font-family: var(--font-serif); font-size: 42px; font-weight: 400; line-height: 1.2; margin-bottom: 12px; }
+.header-sub { font-size: 16px; color: rgba(255,255,255,0.72); font-weight: 300; }
+.header-meta { display: flex; gap: 24px; margin-top: 28px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.15); flex-wrap: wrap; }
+.header-meta-item { font-family: var(--font-mono); font-size: 12px; color: rgba(255,255,255,0.55); }
+.header-meta-item span { color: rgba(255,255,255,0.88); font-weight: 600; }
+
+/* NAV */
+.nav-wrap { position: sticky; top: 0; z-index: 100; background: var(--white); border-bottom: 2px solid var(--navy); overflow-x: auto; }
+.nav-tabs { display: flex; min-width: max-content; padding: 0 64px; }
+.nav-tab { padding: 14px 20px; font-size: 13px; font-family: var(--font-mono); font-weight: 600; color: var(--gray-mid); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s; text-decoration: none; display: block; margin-bottom: -2px; }
+.nav-tab:hover { color: var(--navy); }
+.nav-tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+
+/* LAYOUT */
+.main { max-width: 1100px; margin: 0 auto; padding: 0 64px 80px; }
+.section { padding: 56px 0 0; scroll-margin-top: 60px; }
+.section-label { font-family: var(--font-mono); font-size: 12px; color: var(--navy); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 10px; font-weight: 600; }
+.section-title { font-family: var(--font-serif); font-size: 30px; font-weight: 400; color: var(--navy); margin-bottom: 8px; line-height: 1.25; }
+.section-desc { font-size: 15px; color: var(--gray-mid); margin-bottom: 28px; line-height: 1.6; }
+.divider { height: 1px; background: var(--gray-border); margin: 48px 0 0; }
+
+/* CARD */
+.card { background: var(--white); border: 1px solid var(--gray-border); border-radius: 2px; padding: 24px 28px; }
+.card + .card { margin-top: 12px; }
+
+/* CALLOUT */
+.callout { padding: 16px 20px; border-radius: 2px; margin: 20px 0; font-size: 14px; line-height: 1.65; }
+.callout.navy { background: var(--navy-light); border-left: 3px solid var(--navy); color: var(--navy); }
+.callout.warn { background: var(--warn-bg); border-left: 3px solid #e6a000; color: var(--warn); }
+.callout.correct { background: var(--correct-bg); border-left: 3px solid var(--correct); color: var(--correct); }
+.callout.wrong { background: var(--wrong-bg); border-left: 3px solid var(--wrong); color: var(--wrong); }
+.callout-title { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+
+/* TABLE */
+.tbl-wrap { overflow-x: auto; margin: 20px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead tr { background: var(--navy); color: var(--white); }
+thead th { padding: 11px 14px; text-align: left; font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; }
+tbody tr { border-bottom: 1px solid var(--gray-border); }
+tbody tr:hover { background: var(--gray-light); }
+tbody td { padding: 10px 14px; vertical-align: top; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 2px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; }
+.tag.yes { background: var(--correct-bg); color: var(--correct); }
+.tag.partial { background: var(--warn-bg); color: var(--warn); }
+.tag.no { background: var(--wrong-bg); color: var(--wrong); }
+
+/* GRID */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 20px 0; }
+
+/* LAYER DIAGRAM */
+.layer-stack { display: flex; flex-direction: column; gap: 0; margin: 20px 0; }
+.layer-box { padding: 16px 24px; border: 1px solid var(--gray-border); font-size: 14px; line-height: 1.6; }
+.layer-box.top { background: var(--navy); color: var(--white); border-color: var(--navy); }
+.layer-box.mid { background: var(--navy-light); border-color: var(--gray-border); }
+.layer-box.bot { background: var(--white); border-color: var(--gray-border); }
+.layer-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; opacity: 0.75; }
+.layer-arrow { text-align: center; font-size: 20px; color: var(--navy); padding: 4px 0; background: var(--bg); border-left: 1px solid var(--gray-border); border-right: 1px solid var(--gray-border); }
+
+/* VERSUS GRID */
+.vs-grid { display: grid; grid-template-columns: 1fr 40px 1fr; gap: 0; margin: 20px 0; align-items: stretch; }
+.vs-col { background: var(--white); border: 1px solid var(--gray-border); border-radius: 2px; overflow: hidden; }
+.vs-head { padding: 12px 18px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; }
+.vs-head.plan { background: var(--navy); color: var(--white); }
+.vs-head.control { background: #1a3a5c; color: var(--white); }
+.vs-body { padding: 14px 18px; }
+.vs-row { padding: 7px 0; border-bottom: 1px solid var(--gray-border); font-size: 13px; line-height: 1.55; }
+.vs-row:last-child { border-bottom: none; }
+.vs-divider { display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; font-size: 16px; color: var(--gray-mid); }
+
+/* COVERAGE MATRIX */
+.coverage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+.cov-card { background: var(--white); border: 1px solid var(--gray-border); border-radius: 2px; padding: 18px 20px; }
+.cov-head { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; padding: 4px 8px; border-radius: 2px; display: inline-block; }
+.cov-head.sac { background: var(--correct-bg); color: var(--correct); }
+.cov-head.gap { background: var(--wrong-bg); color: var(--wrong); }
+.cov-item { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; font-size: 13px; line-height: 1.5; border-bottom: 1px solid var(--gray-border); }
+.cov-item:last-child { border-bottom: none; }
+.cov-icon { flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+
+/* ARCH PATTERN */
+.pattern-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 20px 0; }
+.pattern-card { background: var(--white); border: 1px solid var(--gray-border); border-radius: 2px; overflow: hidden; }
+.pattern-head { padding: 11px 16px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; }
+.pattern-body { padding: 14px 16px; }
+.pattern-flow { display: flex; flex-direction: column; gap: 3px; margin-bottom: 12px; }
+.p-step { background: var(--gray-light); border-left: 3px solid var(--navy); padding: 5px 9px; font-family: var(--font-mono); font-size: 11px; color: var(--navy); line-height: 1.4; }
+.p-arrow { padding: 1px 9px; font-size: 12px; color: var(--gray-mid); }
+
+/* MAP TABLE */
+.map-table { margin: 20px 0; }
+.map-row { display: grid; grid-template-columns: 160px 190px 1fr 70px; gap: 0; border-bottom: 1px solid var(--gray-border); font-size: 13px; align-items: center; }
+.map-row.hdr { background: var(--navy); color: var(--white); font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+.map-row:nth-child(even):not(.hdr) { background: var(--gray-light); }
+.map-cell { padding: 10px 14px; }
+.mono { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--navy); }
+.risk { display: inline-block; padding: 2px 7px; border-radius: 2px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; }
+.risk.h { background: var(--wrong-bg); color: var(--wrong); }
+.risk.m { background: var(--warn-bg); color: var(--warn); }
+
+/* CLOSED LOOP */
+.loop-diagram { background: var(--white); border: 1px solid var(--gray-border); border-radius: 2px; padding: 28px; margin: 20px 0; }
+.loop-row { display: flex; align-items: stretch; gap: 0; justify-content: center; flex-wrap: wrap; }
+.loop-step { flex: 1; min-width: 160px; max-width: 220px; }
+.loop-box { background: var(--navy-light); border: 1px solid var(--gray-border); border-radius: 2px; padding: 14px 14px; text-align: center; height: 100%; }
+.loop-box.active { background: var(--navy); color: var(--white); border-color: var(--navy); }
+.loop-num { font-family: var(--font-mono); font-size: 11px; font-weight: 700; margin-bottom: 6px; opacity: 0.7; }
+.loop-title { font-size: 13px; font-weight: 500; line-height: 1.4; margin-bottom: 4px; }
+.loop-sub { font-size: 11px; opacity: 0.65; line-height: 1.4; font-family: var(--font-mono); }
+.loop-arrow { display: flex; align-items: center; padding: 0 6px; color: var(--navy); font-size: 20px; font-weight: 700; flex-shrink: 0; }
+.loop-detail { margin-top: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.loop-detail-item { background: var(--gray-light); border-radius: 2px; padding: 12px 14px; font-size: 12px; line-height: 1.6; }
+.loop-detail-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+
+/* FINAL FRAME */
+.final-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 20px 0; }
+.final-card { background: var(--white); border: 1px solid var(--gray-border); border-radius: 2px; overflow: hidden; }
+.final-head { padding: 12px 16px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; }
+.final-head.green { background: var(--correct-bg); color: var(--correct); }
+.final-head.yellow { background: var(--warn-bg); color: var(--warn); }
+.final-head.red { background: var(--wrong-bg); color: var(--wrong); }
+.final-body { padding: 14px 16px; }
+.final-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--gray-border); font-size: 13px; line-height: 1.5; }
+.final-item:last-child { border-bottom: none; }
+
+/* DRILL */
+.drill-card { background: var(--white); border: 1px solid var(--gray-border); border-radius: 2px; margin-bottom: 12px; overflow: hidden; }
+.drill-question { padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; font-size: 14px; font-weight: 500; user-select: none; }
+.drill-question:hover { background: var(--gray-light); }
+.drill-toggle-icon { font-family: var(--font-mono); font-size: 18px; color: var(--navy); flex-shrink: 0; line-height: 1; margin-top: 2px; }
+.drill-answer { display: none; padding: 16px 20px; background: var(--navy-light); border-top: 1px solid var(--gray-border); font-size: 14px; line-height: 1.7; color: var(--navy); }
+.drill-answer.open { display: block; }
+
+/* QUIZ */
+.quiz-q { font-weight: 500; font-size: 15px; margin-bottom: 14px; line-height: 1.55; }
+.quiz-options { display: flex; flex-direction: column; gap: 8px; }
+.quiz-opt { display: flex; align-items: flex-start; gap: 10px; padding: 11px 16px; background: var(--white); border: 1px solid var(--gray-border); border-radius: 2px; cursor: pointer; font-size: 14px; transition: all 0.15s; user-select: none; }
+.quiz-opt:hover { border-color: var(--navy); background: var(--navy-light); }
+.quiz-opt.correct { background: var(--correct-bg); border-color: var(--correct); color: var(--correct); }
+.quiz-opt.wrong { background: var(--wrong-bg); border-color: var(--wrong); color: var(--wrong); }
+.quiz-opt.disabled { cursor: default; pointer-events: none; }
+.opt-label { font-family: var(--font-mono); font-size: 12px; font-weight: 600; min-width: 20px; margin-top: 1px; }
+.quiz-feedback { margin-top: 12px; padding: 12px 16px; border-radius: 2px; font-size: 14px; display: none; }
+.quiz-feedback.show { display: block; }
+.quiz-feedback.correct { background: var(--correct-bg); color: var(--correct); border-left: 3px solid var(--correct); }
+.quiz-feedback.wrong { background: var(--wrong-bg); color: var(--wrong); border-left: 3px solid var(--wrong); }
+
+/* CHECKLIST */
+.checklist-wrap { margin: 20px 0; }
+.checklist-progress { height: 6px; background: var(--gray-border); border-radius: 3px; margin-bottom: 16px; overflow: hidden; }
+.checklist-bar { height: 100%; background: var(--navy); border-radius: 3px; transition: width 0.4s ease; width: 0%; }
+.checklist-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--gray-border); cursor: pointer; user-select: none; }
+.checklist-item:last-child { border-bottom: none; }
+.check-box { width: 18px; height: 18px; border: 2px solid var(--gray-border); border-radius: 2px; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.checklist-item.checked .check-box { background: var(--navy); border-color: var(--navy); }
+.check-mark { color: white; font-size: 11px; font-weight: 700; display: none; }
+.checklist-item.checked .check-mark { display: block; }
+.check-text { font-size: 14px; line-height: 1.55; }
+.checklist-item.checked .check-text { color: var(--gray-mid); text-decoration: line-through; }
+.checklist-score { font-family: var(--font-mono); font-size: 13px; color: var(--gray-mid); margin-top: 12px; }
+
+@media (max-width: 768px) {
+  .grid-2, .grid-3, .pattern-grid, .final-grid, .coverage-grid { grid-template-columns: 1fr; }
+  .vs-grid { grid-template-columns: 1fr; }
+  .vs-divider { display: none; }
+  .loop-row { flex-direction: column; align-items: center; }
+  .loop-arrow { transform: rotate(90deg); padding: 4px 0; }
+  .loop-detail { grid-template-columns: 1fr 1fr; }
+  .map-row { grid-template-columns: 1fr 1fr; }
+  .main { padding: 0 24px 64px; }
+  .header { padding: 32px 24px 28px; }
+  .nav-tabs { padding: 0 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-label">ASPN BAC사업부 · SAP 전문가 교육 시리즈 · Module 2 of 2</div>
+  <h1>SAC로 CO 비용 통제를<br>가시화하고 계획화하는 방법</h1>
+  <div class="header-sub">SAC는 무엇을 보완하고, 무엇은 여전히 한계인가</div>
+  <div class="header-meta">
+    <div class="header-meta-item">대상 <span>SAC/GR 담당 컨설턴트 (주력) · 신입/주니어 심화</span></div>
+    <div class="header-meta-item">선수 학습 <span>Module 1 완료 필수</span></div>
+    <div class="header-meta-item">섹션 <span>6개</span></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-wrap">
+  <div class="nav-tabs">
+    <a class="nav-tab active" href="#s1" onclick="setTab(this)">2-1 두 레이어의 차이</a>
+    <a class="nav-tab" href="#s2" onclick="setTab(this)">2-2 SAC의 역할과 한계</a>
+    <a class="nav-tab" href="#s3" onclick="setTab(this)">2-3 연계 아키텍처</a>
+    <a class="nav-tab" href="#s4" onclick="setTab(this)">2-4 ACDOCP 매핑 실전</a>
+    <a class="nav-tab" href="#s5" onclick="setTab(this)">2-5 Closed-Loop 설계</a>
+    <a class="nav-tab" href="#s6" onclick="setTab(this)">2-6 판단 프레임</a>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ═══════════════════════════════════════════
+     SECTION 2-1 CO 통제의 두 레이어
+═══════════════════════════════════════════ -->
+<div class="section" id="s1">
+  <div class="section-label">Section 2-1</div>
+  <div class="section-title">CO 통제의 두 레이어 — 계획과 통제는 다르다</div>
+  <div class="section-desc">SAC가 CO 비용 통제에서 하는 역할을 이해하려면, 먼저 "계획(Plan)"과 "통제(Control)"가 근본적으로 다른 레이어임을 명확히 해야 한다.</div>
+
+  <div class="vs-grid">
+    <div class="vs-col">
+      <div class="vs-head plan">계획 레이어 (Plan Layer)</div>
+      <div class="vs-body">
+        <div class="vs-row"><strong>핵심 질문</strong>: 얼마를 쓸 것인가?</div>
+        <div class="vs-row"><strong>작동 시점</strong>: 지출 발생 이전 (사전)</div>
+        <div class="vs-row"><strong>데이터 저장소</strong>: ACDOCP</div>
+        <div class="vs-row"><strong>SAC의 역할</strong>: 계획 수립 · 시뮬레이션 · Write-Back</div>
+        <div class="vs-row"><strong>보고 목적</strong>: Plan/Actual 비교 분석</div>
+        <div class="vs-row"><strong>예시</strong>: "2025년 마케팅 CC 예산 5억 설정"</div>
+      </div>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="vs-col">
+      <div class="vs-head control">통제 레이어 (Control Layer)</div>
+      <div class="vs-body">
+        <div class="vs-row"><strong>핵심 질문</strong>: 초과 지출을 막을 수 있는가?</div>
+        <div class="vs-row"><strong>작동 시점</strong>: 지출 발생 시점 (실시간)</div>
+        <div class="vs-row"><strong>데이터 저장소</strong>: ACDOCA + CO 통제 오브젝트</div>
+        <div class="vs-row"><strong>SAC의 역할</strong>: 없음 (S/4 CO 전담)</div>
+        <div class="vs-row"><strong>보고 목적</strong>: AVC · Budget Control · 차이 분석</div>
+        <div class="vs-row"><strong>예시</strong>: "예산 초과 시 구매 오더 차단"</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout wrong">
+    <div class="callout-title">핵심 오해 — SAC Write-Back ≠ 비용 통제</div>
+    SAC에서 ACDOCP에 계획 데이터를 Write-Back하는 것은 <strong>"얼마를 계획했는가"를 S/4에 기록하는 행위</strong>다. 이것이 있어야 Plan/Actual 비교 보고서가 작동하지만, 그 자체로 지출을 막거나 경고를 발생시키지는 않는다. 비용 통제(차단·경고)는 CO 모듈의 Availability Control이 담당하며, SAC는 그 레이어에 개입하지 않는다.
+  </div>
+
+  <div class="layer-stack">
+    <div class="layer-box top">
+      <div class="layer-label">SAC Planning — 계획 레이어</div>
+      예산 입력 · 시뮬레이션 · Rolling Forecast · 승인 워크플로우 → ACDOCP Write-Back
+    </div>
+    <div class="layer-arrow">↕ SAP_COM_0087 / SAP_COM_0065</div>
+    <div class="layer-box mid">
+      <div class="layer-label">S/4HANA Universal Journal — 데이터 레이어</div>
+      ACDOCA (실적) · ACDOCP (계획) · CO 오브젝트 (CC / IO / WBS / PC)
+    </div>
+    <div class="layer-arrow">↕ CO 내부 엔진</div>
+    <div class="layer-box bot">
+      <div class="layer-label">CO 통제 엔진 — 통제 레이어</div>
+      Availability Control (AVC) · Overhead Allocation · Variance Analysis · FM (Public Sector)
+    </div>
+  </div>
+
+  <div class="callout navy">
+    <div class="callout-title">두 레이어가 함께 작동하는 방식</div>
+    CC 예산을 ACDOCP에 설정(SAC Write-Back) → 실제 구매/회계 전기 발생(ACDOCA) → CO 엔진이 두 테이블을 비교하여 잔여 예산 계산 → AVC가 초과 여부 판단 → Fiori 보고서에서 Plan/Actual 표시.<br><br>
+    SAC는 이 흐름에서 <strong>첫 단계(계획 설정)를 고도화</strong>하는 역할을 한다. 통제 엔진 자체를 대체하지는 않는다.
+  </div>
+
+  <div class="drill-card">
+    <div class="drill-question" onclick="toggleDrill(this)">
+      <span>💬 고객사 CFO가 "SAC Planning을 도입하면 예산 초과 지출도 막을 수 있냐"고 묻습니다. 어떻게 답합니까?</span>
+      <span class="drill-toggle-icon">+</span>
+    </div>
+    <div class="drill-answer">
+      <strong>정확한 답변 구조:</strong> "SAC는 예산을 더 정교하게 수립하고 실적과 비교하는 데 탁월합니다. 그러나 지출 차단(Hard Stop)은 S/4HANA CO 모듈의 Availability Control이 담당합니다. Public Cloud Commercial 에디션에서는 Hard AVC 자체가 제한되므로, SAC 도입과 별개로 예산 통제 수준(Soft vs Hard)에 대한 의사결정이 먼저 필요합니다."<br><br>
+      SAC Write-Back과 CO AVC를 혼동하여 "SAC 도입 = 예산 통제 해결"로 답하는 것이 흔한 실수다.
+    </div>
+  </div>
+</div>
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 2-2 SAC가 채우는 영역
+═══════════════════════════════════════════ -->
+<div class="section" id="s2">
+  <div class="section-label">Section 2-2</div>
+  <div class="section-title">SAC가 보완하는 영역 — 그리고 여전히 안 되는 것</div>
+  <div class="section-desc">Module 1에서 확인한 Public Cloud CO 기능 한계 중에서, SAC가 실질적으로 보완하는 영역과 SAC로도 해결되지 않는 영역을 명확히 구분해야 한다.</div>
+
+  <div class="coverage-grid">
+    <div class="cov-card">
+      <div class="cov-head sac">✅ SAC가 실질적으로 보완하는 영역</div>
+      <div class="cov-item"><span class="cov-icon">📊</span><span><strong>계획 수립 고도화</strong> — S/4 Fiori 앱보다 훨씬 유연한 Top-Down / Bottom-Up 예산 편성, 시뮬레이션, 버전 비교</span></div>
+      <div class="cov-item"><span class="cov-icon">🔄</span><span><strong>Rolling Forecast</strong> — S/4 단독으로는 어려운 월별·분기별 동적 예측 재계산을 Data Action으로 자동화</span></div>
+      <div class="cov-item"><span class="cov-icon">📈</span><span><strong>Plan/Actual 시각화</strong> — CC / PC / WBS 단위 계획 대비 실적을 Story 대시보드로 경영진에게 즉시 제공</span></div>
+      <div class="cov-item"><span class="cov-icon">🤝</span><span><strong>승인 워크플로우</strong> — 부서별 예산 입력 → 검토 → 확정의 협업 프로세스를 S/4 외부에서 관리</span></div>
+      <div class="cov-item"><span class="cov-icon">🧮</span><span><strong>Costing-Based 수익성 분석 대체</strong> — S/4 Public Cloud에서 미지원인 Costing-Based CO-PA를 SAC Story에서 유사하게 구현</span></div>
+    </div>
+    <div class="cov-card">
+      <div class="cov-head gap">❌ SAC로도 해결되지 않는 영역</div>
+      <div class="cov-item"><span class="cov-icon">🚫</span><span><strong>Hard AVC (예산 초과 차단)</strong> — 구매 오더·회계 전기 차단은 CO AVC 전담. SAC는 개입 불가</span></div>
+      <div class="cov-item"><span class="cov-icon">🚫</span><span><strong>Iterative Allocation</strong> — 순환 배부 로직은 S/4 CO 엔진 내부 처리. SAC Data Action으로 근사 구현은 가능하나 표준 아님</span></div>
+      <div class="cov-item"><span class="cov-icon">🚫</span><span><strong>FM Availability Control</strong> — 자금 용도 제한·이월예산·커미트먼트 관리는 FM 모듈 전담. SAC 범위 밖</span></div>
+      <div class="cov-item"><span class="cov-icon">🚫</span><span><strong>Activity-Based Costing</strong> — Activity Type 기반 내부 서비스 원가 계산은 CO-OM 엔진 내부 처리</span></div>
+      <div class="cov-item"><span class="cov-icon">🚫</span><span><strong>실시간 커미트먼트 통제</strong> — PO·PR 발행 시점의 예산 잔액 실시간 차감은 CO 통제 레이어 전담</span></div>
+    </div>
+  </div>
+
+  <div class="callout navy">
+    <div class="callout-title">컨설턴트 포지셔닝 원칙</div>
+    SAC를 제안할 때 <strong>"CO의 한계를 SAC가 메운다"</strong>는 식의 과장은 금물이다. 정확한 포지션은 <strong>"CO 통제 엔진 위에서 계획·가시화·협업 레이어를 강화한다"</strong>는 것이다. 고객사가 원하는 것이 "지출 차단"인지 "계획 고도화"인지를 먼저 구분하고, SAC의 역할 범위를 명확히 설정해야 한다.
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Module 1 확인 한계</th>
+          <th>SAC 보완 가능 여부</th>
+          <th>SAC의 역할</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Costing-Based CO-PA 미지원</td>
+          <td><span class="tag partial">부분 보완</span></td>
+          <td>Account-Based 실적 + SAC 모델에서 수익성 시뮬레이션</td>
+        </tr>
+        <tr>
+          <td>Hard Budget Control 제한</td>
+          <td><span class="tag no">불가</span></td>
+          <td>계획 초과 시각화 · 알림은 가능, 차단 불가</td>
+        </tr>
+        <tr>
+          <td>Iterative Allocation 미지원</td>
+          <td><span class="tag partial">근사 구현</span></td>
+          <td>Data Action으로 배부 로직 구현 (표준 아님, 검증 필요)</td>
+        </tr>
+        <tr>
+          <td>FM AVC 미지원 (Commercial)</td>
+          <td><span class="tag no">불가</span></td>
+          <td>예산 소진율 대시보드 제공은 가능, 통제 불가</td>
+        </tr>
+        <tr>
+          <td>복잡한 Variance Category</td>
+          <td><span class="tag partial">부분 보완</span></td>
+          <td>SAC Story에서 커스텀 차이 분석 시각화</td>
+        </tr>
+        <tr>
+          <td>Rolling Forecast 부재</td>
+          <td><span class="tag yes">완전 보완</span></td>
+          <td>SAC Data Action 기반 자동 재계산이 핵심 강점</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 2-3 연계 아키텍처 선택
+═══════════════════════════════════════════ -->
+<div class="section" id="s3">
+  <div class="section-label">Section 2-3</div>
+  <div class="section-title">연계 아키텍처 선택 — 용도별 통신 시나리오</div>
+  <div class="section-desc">SAC와 S/4HANA Public Cloud의 연계는 목적에 따라 다른 표준 통신 시나리오를 사용한다. 세 가지 패턴을 정확히 구분해야 고객사 요건에 맞는 설계가 가능하다.</div>
+
+  <div class="pattern-grid">
+    <div class="pattern-card">
+      <div class="pattern-head" style="background:var(--navy);color:var(--white);">패턴 A — SAP_COM_0065<br><span style="font-size:10px;opacity:0.75;">실적 Live 조회</span></div>
+      <div class="pattern-body">
+        <div class="pattern-flow">
+          <div class="p-step">S/4HANA CDS View</div>
+          <div class="p-arrow">↓ OAuth 2.0</div>
+          <div class="p-step">SAP_COM_0065</div>
+          <div class="p-arrow">↓ Live Connection</div>
+          <div class="p-step">SAC Story / Dashboard</div>
+        </div>
+        <div style="font-size:12px;line-height:1.65;color:var(--gray-dark);">
+          <strong>용도</strong>: CC·PC별 실적 대시보드, Plan/Actual 비교 조회<br>
+          <strong>Write-Back</strong>: 불가<br>
+          <strong>Datasphere</strong>: 불필요
+        </div>
+      </div>
+    </div>
+
+    <div class="pattern-card">
+      <div class="pattern-head" style="background:#1a3a5c;color:var(--white);">패턴 B — SAP_COM_0087<br><span style="font-size:10px;opacity:0.75;">계획 Write-Back 표준</span></div>
+      <div class="pattern-body">
+        <div class="pattern-flow">
+          <div class="p-step">SAC Planning (확정 버전)</div>
+          <div class="p-arrow">↓ Data Management Export</div>
+          <div class="p-step">SAP_COM_0087</div>
+          <div class="p-arrow">↓ API_PLPACDOCPDATA_SRV</div>
+          <div class="p-step">ACDOCP 직접 전기</div>
+        </div>
+        <div style="font-size:12px;line-height:1.65;color:var(--gray-dark);">
+          <strong>용도</strong>: CC·PC·손익 계획 → S/4 반영<br>
+          <strong>Write-Back</strong>: 핵심 기능<br>
+          <strong>Datasphere</strong>: 불필요
+        </div>
+      </div>
+    </div>
+
+    <div class="pattern-card">
+      <div class="pattern-head" style="background:var(--gray-light);color:var(--gray-dark);">패턴 C — Embedded SAC<br><span style="font-size:10px;color:var(--gray-mid);">내장형 조회</span></div>
+      <div class="pattern-body">
+        <div class="pattern-flow">
+          <div class="p-step">S/4HANA 내부 데이터</div>
+          <div class="p-arrow">↓ 중간 레이어 없음</div>
+          <div class="p-step">Embedded SAC</div>
+          <div class="p-arrow">↓ 내장 뷰어</div>
+          <div class="p-step">내부 대시보드</div>
+        </div>
+        <div style="font-size:12px;line-height:1.65;color:var(--gray-dark);">
+          <strong>용도</strong>: S/4 내부 간단 분석<br>
+          <strong>Write-Back</strong>: 불가<br>
+          <strong>Datasphere</strong>: 불필요 · 기능 제한
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout navy">
+    <div class="callout-title">CO 비용 통제 가시화를 위한 표준 조합</div>
+    계획 수립(SAC Planning) + 실적 조회(Live Connection)를 함께 구성해야 비로소 "계획 대비 실적 비교"가 완성된다.<br><br>
+    <strong>패턴 B (SAP_COM_0087)</strong> → SAC 계획을 ACDOCP에 저장<br>
+    <strong>패턴 A (SAP_COM_0065)</strong> → ACDOCA 실적을 SAC Story에서 실시간 조회<br><br>
+    두 패턴을 조합하면 Datasphere 없이도 Closed-Loop 재무 계획 프로세스가 완성된다. Group Reporting 계획이 추가로 필요한 경우 <strong>SAP_COM_0370</strong>을 별도 적용한다.
+  </div>
+
+  <div class="drill-card">
+    <div class="drill-question" onclick="toggleDrill(this)">
+      <span>💬 고객사가 "SAC에서 코스트센터 예산을 편성하고, S/4 보고서에서 예산 대비 실적을 바로 보고 싶다"고 합니다. 어떤 통신 시나리오 조합이 필요합니까?</span>
+      <span class="drill-toggle-icon">+</span>
+    </div>
+    <div class="drill-answer">
+      <strong>SAP_COM_0087 + SAP_COM_0065 조합이 필요하다.</strong><br><br>
+      SAP_COM_0087: SAC에서 편성한 CC 예산을 ACDOCP에 Write-Back → S/4의 "Cost Centers - Plan/Actual" Fiori 보고서에 계획 수치 활성화.<br>
+      SAP_COM_0065: ACDOCA 실적 데이터를 SAC Story에서 Live 조회 → SAC 내에서도 계획 vs 실적 비교 대시보드 구성 가능.<br><br>
+      두 시나리오 모두 S/4HANA Cloud Communication Arrangements에서 설정하며, Datasphere는 불필요하다.
+    </div>
+  </div>
+</div>
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 2-4 ACDOCP 매핑 실전
+═══════════════════════════════════════════ -->
+<div class="section" id="s4">
+  <div class="section-label">Section 2-4</div>
+  <div class="section-title">ACDOCP Write-Back 매핑 실전 — 5대 주의사항</div>
+  <div class="section-desc">SAP_COM_0087을 통해 ACDOCP에 Write-Back할 때 가장 많은 오류가 발생하는 지점이 매핑이다. 5가지 주의사항을 완전히 내재화해야 한다.</div>
+
+  <div class="map-table">
+    <div class="map-row hdr">
+      <div class="map-cell">매핑 항목</div>
+      <div class="map-cell">SAC → ACDOCP 필드</div>
+      <div class="map-cell">핵심 주의사항</div>
+      <div class="map-cell">위험도</div>
+    </div>
+    <div class="map-row">
+      <div class="map-cell"><strong>① Plan Version</strong></div>
+      <div class="map-cell"><span class="mono">SAC Version → VERSN</span></div>
+      <div class="map-cell">SAC Plan Category와 S/4 Plan Version(VERSN)은 별개 체계. 미매핑 시 데이터는 전기되나 S/4 표준 보고서에 나타나지 않음. 중앙 매핑 테이블 필수.</div>
+      <div class="map-cell"><span class="risk h">HIGH</span></div>
+    </div>
+    <div class="map-row">
+      <div class="map-cell"><strong>② Cost Element</strong></div>
+      <div class="map-cell"><span class="mono">SAC Account → KSTAR</span></div>
+      <div class="map-cell">Primary CE / Secondary CE / Statistical CE 구분 필수. Statistical CE 전기 시 CO 원가 집계 제외. 비활성 CE 전기 시 API 오류 발생.</div>
+      <div class="map-cell"><span class="risk h">HIGH</span></div>
+    </div>
+    <div class="map-row">
+      <div class="map-cell"><strong>③ Period</strong></div>
+      <div class="map-cell"><span class="mono">SAC Time Dim → POPER</span></div>
+      <div class="map-cell">YTD 누계 방식 Write-Back 시 중복 계상 발생. 반드시 월별 증분 방식으로 설계. 재전기 전 기존 데이터 역전기(Reverse) 선행 필수.</div>
+      <div class="map-cell"><span class="risk h">HIGH</span></div>
+    </div>
+    <div class="map-row">
+      <div class="map-cell"><strong>④ 통화</strong></div>
+      <div class="map-cell"><span class="mono">SAC Amount → HSL/KSL</span></div>
+      <div class="map-cell">SAC 모델 단위(예: 백만 원)와 ACDOCP 원화 단위 불일치 시 금액 1/1,000,000 오류. Scale Factor 변환 및 HSL(회사통화)/KSL(CO통화) 분리 처리 필요.</div>
+      <div class="map-cell"><span class="risk m">MID</span></div>
+    </div>
+    <div class="map-row">
+      <div class="map-cell"><strong>⑤ Record Type</strong></div>
+      <div class="map-cell"><span class="mono">고정값 → VRGAR='F'</span></div>
+      <div class="map-cell">VRGAR은 반드시 'F'(원가계획) 고정. SAC 모델에 없는 필드이므로 API 호출 시 상수값으로 주입. 임의 변경 시 CO 문서 인식 오류.</div>
+      <div class="map-cell"><span class="risk m">MID</span></div>
+    </div>
+  </div>
+
+  <div class="callout wrong">
+    <div class="callout-title">가장 흔한 실수 — Plan Version 매핑 누락</div>
+    "Write-Back 성공으로 표시되는데 S/4 Plan/Actual 보고서에 계획이 안 보인다"는 증상의 원인 1순위. SAC Plan Category ID를 그대로 VERSN에 주입하면 S/4가 인식하지 못하는 버전 코드가 된다. S/4 Communication Arrangements 설정 시 Plan Category ↔ VERSN 매핑을 반드시 명시적으로 구성해야 한다.
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-title">Period 중복 계상 시나리오</div>
+    1월 계획 100만원을 YTD 누계로 매월 Write-Back하면: 2월 Write-Back 시 1~2월 누계 200만원이 전기되어 1월 잔액이 100 + 100 = 200만원으로 중복 계상된다. 예방 설계: 신규 전기 전 해당 VERSN + GJAHR + KOSTL 조합의 기존 데이터를 역전기(마이너스 전기)로 상쇄 후 재전기.
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="quiz-q">📝 확인 문제 — ACDOCP Write-Back 후 S/4 "Cost Centers - Plan/Actual" 보고서에 계획 수치가 전혀 나타나지 않는다. 가장 먼저 확인해야 할 항목은?</div>
+    <div class="quiz-options" id="q1">
+      <div class="quiz-opt" onclick="checkQuiz('q1',this,false)"><span class="opt-label">A</span>SAC Planning 모델의 계정(Account) 차원 유효성</div>
+      <div class="quiz-opt" onclick="checkQuiz('q1',this,true)"><span class="opt-label">B</span>SAC Plan Category와 S/4 Plan Version(VERSN) 매핑 정합성</div>
+      <div class="quiz-opt" onclick="checkQuiz('q1',this,false)"><span class="opt-label">C</span>ACDOCP 테이블의 HSL 금액 단위</div>
+      <div class="quiz-opt" onclick="checkQuiz('q1',this,false)"><span class="opt-label">D</span>SAP_COM_0087 OAuth 토큰 만료 여부</div>
+    </div>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+  </div>
+</div>
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 2-5 Closed-Loop 설계 실전
+═══════════════════════════════════════════ -->
+<div class="section" id="s5">
+  <div class="section-label">Section 2-5</div>
+  <div class="section-title">Closed-Loop 설계 실전 — 전 과정 연결</div>
+  <div class="section-desc">CO 비용 통제를 SAC로 가시화·계획화하는 완성된 구조는 4단계 순환 루프다. 각 단계의 기술적 연결과 실무 주의사항을 설계 관점에서 이해해야 한다.</div>
+
+  <div class="loop-diagram">
+    <div class="loop-row">
+      <div class="loop-step">
+        <div class="loop-box active">
+          <div class="loop-num">STEP 01</div>
+          <div class="loop-title">실적 데이터 조회</div>
+          <div class="loop-sub">ACDOCA → SAC<br>SAP_COM_0065</div>
+        </div>
+      </div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step">
+        <div class="loop-box active">
+          <div class="loop-num">STEP 02</div>
+          <div class="loop-title">SAC Planning 수립</div>
+          <div class="loop-sub">Top-Down / Bottom-Up<br>시뮬레이션 · 승인</div>
+        </div>
+      </div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step">
+        <div class="loop-box active">
+          <div class="loop-num">STEP 03</div>
+          <div class="loop-title">ACDOCP Write-Back</div>
+          <div class="loop-sub">SAC → S/4<br>SAP_COM_0087</div>
+        </div>
+      </div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step">
+        <div class="loop-box active">
+          <div class="loop-num">STEP 04</div>
+          <div class="loop-title">Plan/Actual 비교</div>
+          <div class="loop-sub">S/4 Fiori 보고서<br>SAC Story 대시보드</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="loop-detail">
+      <div class="loop-detail-item">
+        <div class="loop-detail-label">STEP 01 주의</div>
+        전년 실적을 SAC로 가져와 계획 기준선(Baseline)으로 사용. Live 조회 시 복잡한 집계 쿼리는 타임아웃 위험 → 주요 CDS View 사전 최적화 필요.
+      </div>
+      <div class="loop-detail-item">
+        <div class="loop-detail-label">STEP 02 주의</div>
+        SAC Plan Category와 S/4 VERSN 매핑 테이블을 Planning 시작 전 확정. 버전 체계 미확정 시 Write-Back 단계에서 전면 재작업.
+      </div>
+      <div class="loop-detail-item">
+        <div class="loop-detail-label">STEP 03 주의</div>
+        역전기(Reverse) 선행 → 재전기 구조 설계. 기간 Closed 여부 사전 확인. CE 유효성 사전 검증 로직 포함.
+      </div>
+      <div class="loop-detail-item">
+        <div class="loop-detail-label">STEP 04 주의</div>
+        S/4 표준 Fiori 보고서(Cost Centers - Plan/Actual)는 VERSN 기준으로 조회. SAC Story는 SAP_COM_0065 Live로 ACDOCA 실시간 반영.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout correct">
+    <div class="callout-title">이 루프가 완성될 때 가능해지는 것</div>
+    <strong>① 경영진 관점</strong>: SAC Story 하나로 계획 대비 실적·예측 달성률을 실시간 확인<br>
+    <strong>② CC 담당자 관점</strong>: 자신의 예산 소진 현황을 Fiori 앱에서 즉시 조회<br>
+    <strong>③ 컨트롤러 관점</strong>: 월 마감 후 실적을 SAC로 즉시 가져와 다음 Rolling Forecast 수립<br>
+    <strong>④ CFO 관점</strong>: 전사 계획·실적·예측을 단일 플랫폼에서 드릴다운
+  </div>
+
+  <div class="drill-card">
+    <div class="drill-question" onclick="toggleDrill(this)">
+      <span>💬 고객사 컨트롤러가 "매월 마감 후 실적을 SAC로 가져와 나머지 기간을 재예측하는 Rolling Forecast를 하고 싶다"고 합니다. 이 루프에서 추가로 설계해야 할 것은 무엇입니까?</span>
+      <span class="drill-toggle-icon">+</span>
+    </div>
+    <div class="drill-answer">
+      <strong>3가지 추가 설계가 필요하다.</strong><br><br>
+      <strong>① 월별 VERSN 체계</strong>: Rolling Forecast는 월마다 새로운 계획 버전을 생성한다. "RF_2025_M01", "RF_2025_M02" 등 버전 명명 규칙과 VERSN 매핑을 사전 설계해야 한다.<br><br>
+      <strong>② 역전기 자동화</strong>: 매월 Write-Back 전 이전 RF 버전의 미래 기간 데이터를 역전기하는 로직이 필요하다. 수동 처리 시 오류 위험 高.<br><br>
+      <strong>③ SAC Data Action 자동화</strong>: 실적 확정 기간은 Actual로 Lock, 미래 기간은 자동 재계산하는 Data Action 스크립트를 설계한다. 이 부분이 Rolling Forecast의 핵심 자동화 포인트다.
+    </div>
+  </div>
+</div>
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 2-6 한계와 판단 프레임
+═══════════════════════════════════════════ -->
+<div class="section" id="s6">
+  <div class="section-label">Section 2-6</div>
+  <div class="section-title">한계와 판단 프레임 — 어디까지 가능하고 무엇이 필요한가</div>
+  <div class="section-desc">SAC + S/4HANA Public Cloud 조합으로 해결되는 것과 안 되는 것을 명확히 정리하고, 고객사 요건에 따른 구현 수준을 판단하는 프레임을 확립한다.</div>
+
+  <div class="final-grid">
+    <div class="final-card">
+      <div class="final-head green">✅ 표준 조합으로 해결</div>
+      <div class="final-body">
+        <div class="final-item"><span>📊</span><span>CC/PC 단위 예산 편성 및 ACDOCP 반영</span></div>
+        <div class="final-item"><span>📈</span><span>Plan/Actual 비교 대시보드 (SAC Story + S/4 Fiori)</span></div>
+        <div class="final-item"><span>🔄</span><span>Rolling Forecast 자동화 (Data Action)</span></div>
+        <div class="final-item"><span>🤝</span><span>예산 편성 협업 워크플로우</span></div>
+        <div class="final-item"><span>🧮</span><span>수익성 시뮬레이션 (Account-Based 기반)</span></div>
+        <div class="final-item"><span>⚡</span><span>Closed-Loop 재무 계획 (Datasphere 불필요)</span></div>
+      </div>
+    </div>
+    <div class="final-card">
+      <div class="final-head yellow">⚠️ 추가 설계 필요</div>
+      <div class="final-body">
+        <div class="final-item"><span>🔧</span><span>복잡한 배부 로직 근사 구현 (SAC Data Action · 표준 아님)</span></div>
+        <div class="final-item"><span>🔧</span><span>다법인 계획 통합 (법인별 VERSN 관리 복잡)</span></div>
+        <div class="final-item"><span>🔧</span><span>비SAP 데이터 결합 분석 (Datasphere 추가 필요)</span></div>
+        <div class="final-item"><span>🔧</span><span>역전기 자동화 (Rolling Forecast 시 필수 설계)</span></div>
+        <div class="final-item"><span>🔧</span><span>SAC ↔ S/4 버전 체계 거버넌스 수립</span></div>
+        <div class="final-item"><span>🔧</span><span>Group Reporting 계획 (SAP_COM_0370 별도)</span></div>
+      </div>
+    </div>
+    <div class="final-card">
+      <div class="final-head red">❌ 구조적으로 불가</div>
+      <div class="final-body">
+        <div class="final-item"><span>🚫</span><span>Hard AVC — 지출 발생 시 실시간 차단</span></div>
+        <div class="final-item"><span>🚫</span><span>FM Availability Control (Commercial)</span></div>
+        <div class="final-item"><span>🚫</span><span>Activity-Based Costing 원가 계산</span></div>
+        <div class="final-item"><span>🚫</span><span>커미트먼트 실시간 차감 통제</span></div>
+        <div class="final-item"><span>🚫</span><span>Costing-Based CO-PA (표준 Value Field)</span></div>
+        <div class="final-item"><span>🚫</span><span>Iterative Allocation (표준 CO 엔진)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:28px;font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--gray-dark);margin-bottom:14px;">구현 수준별 권고 — 고객사 요건에 따른 선택</div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>구현 수준</th>
+          <th>구성</th>
+          <th>가능한 것</th>
+          <th>적합 케이스</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>기본</strong></td>
+          <td>SAP_COM_0065만</td>
+          <td>실적 대시보드 · 현황 모니터링</td>
+          <td>분석 목적만 필요, 계획 편성 불필요</td>
+        </tr>
+        <tr>
+          <td><strong>표준</strong></td>
+          <td>SAP_COM_0065 + SAP_COM_0087</td>
+          <td>완전한 Closed-Loop 재무 계획</td>
+          <td>예산 편성 + 실적 비교가 핵심 요건</td>
+        </tr>
+        <tr>
+          <td><strong>고도화</strong></td>
+          <td>표준 + Datasphere</td>
+          <td>비SAP 데이터 결합 · 전사 BI 통합</td>
+          <td>이기종 시스템 결합 분석 요건 있음</td>
+        </tr>
+        <tr>
+          <td><strong>에디션 변경</strong></td>
+          <td>PCE 또는 On-Premise</td>
+          <td>Hard AVC · FM · ABC · Iterative</td>
+          <td>위 ❌ 항목 중 1개 이상 필수 요건</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:28px;font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--gray-dark);margin-bottom:14px;">자기 점검 체크리스트 — Module 2 핵심 역량</div>
+
+  <div class="checklist-wrap" id="cl1">
+    <div class="checklist-progress"><div class="checklist-bar" id="cl1-bar"></div></div>
+    <div class="checklist-item" onclick="toggleCheck(this,'cl1')">
+      <div class="check-box"><span class="check-mark">✓</span></div>
+      <div class="check-text">"계획 레이어(SAC)"와 "통제 레이어(CO AVC)"의 차이를 고객사에 명확히 설명할 수 있다</div>
+    </div>
+    <div class="checklist-item" onclick="toggleCheck(this,'cl1')">
+      <div class="check-box"><span class="check-mark">✓</span></div>
+      <div class="check-text">SAC가 보완하는 영역(Rolling Forecast, 계획 협업 등)과 여전히 안 되는 영역(Hard AVC, FM 등)을 즉시 구분할 수 있다</div>
+    </div>
+    <div class="checklist-item" onclick="toggleCheck(this,'cl1')">
+      <div class="check-box"><span class="check-mark">✓</span></div>
+      <div class="check-text">SAP_COM_0065 / SAP_COM_0087 / Embedded SAC의 용도 차이와 조합 방식을 설명할 수 있다</div>
+    </div>
+    <div class="checklist-item" onclick="toggleCheck(this,'cl1')">
+      <div class="check-box"><span class="check-mark">✓</span></div>
+      <div class="check-text">ACDOCP Write-Back 5대 매핑 주의사항을 열거하고 Plan Version 매핑 오류의 증상을 설명할 수 있다</div>
+    </div>
+    <div class="checklist-item" onclick="toggleCheck(this,'cl1')">
+      <div class="check-box"><span class="check-mark">✓</span></div>
+      <div class="check-text">Closed-Loop 4단계(실적 조회 → 계획 → Write-Back → 비교)의 각 단계별 기술 연결과 주의사항을 설명할 수 있다</div>
+    </div>
+    <div class="checklist-item" onclick="toggleCheck(this,'cl1')">
+      <div class="check-box"><span class="check-mark">✓</span></div>
+      <div class="check-text">고객사 요건을 듣고 기본/표준/고도화/에디션 변경 중 적합한 구현 수준을 근거와 함께 제시할 수 있다</div>
+    </div>
+    <div class="checklist-score" id="cl1-score">0 / 6 완료</div>
+  </div>
+
+  <div class="card" style="margin-top:28px;">
+    <div class="quiz-q">📝 최종 확인 문제 — 고객사가 "예산 초과 지출을 원천 차단하고 싶고, SAC로 예산을 편성하고 싶다"고 요구합니다. Public Cloud Commercial 에디션으로 이 두 요건을 모두 충족할 수 있습니까?</div>
+    <div class="quiz-options" id="q2">
+      <div class="quiz-opt" onclick="checkQuiz('q2',this,false)"><span class="opt-label">A</span>SAP_COM_0087 Write-Back으로 두 요건 모두 충족 가능하다</div>
+      <div class="quiz-opt" onclick="checkQuiz('q2',this,false)"><span class="opt-label">B</span>Datasphere를 추가하면 Hard AVC도 구현 가능하다</div>
+      <div class="quiz-opt" onclick="checkQuiz('q2',this,true)"><span class="opt-label">C</span>SAC 예산 편성은 가능하나, Hard AVC는 Public Cloud Commercial에서 구조적으로 불가하다</div>
+      <div class="quiz-opt" onclick="checkQuiz('q2',this,false)"><span class="opt-label">D</span>Embedded SAC를 사용하면 두 요건을 동시에 충족할 수 있다</div>
+    </div>
+    <div class="quiz-feedback" id="q2-feedback"></div>
+  </div>
+
+  <div class="callout navy" style="margin-top:28px;">
+    <div class="callout-title">전체 시리즈 완료 — 통합 역량 정리</div>
+    <strong>Module 1</strong>에서 S/4HANA Public Cloud CO 기능의 범위와 구조적 한계를 학습했고, <strong>Module 2</strong>에서 SAC가 그 위에서 어떤 레이어를 보완하는지, 그리고 여전히 안 되는 영역은 무엇인지를 학습했다.<br><br>
+    두 모듈을 통합하면 <strong>"고객사 요건 수집 → 에디션 적합성 판단 → SAC 연계 설계 → 구현 수준 권고"</strong>까지 일관된 컨설팅 논리를 제시할 수 있다.
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+function setTab(el) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+const sections = document.querySelectorAll('.section');
+window.addEventListener('scroll', () => {
+  let cur = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) cur = s.id; });
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    t.classList.toggle('active', t.getAttribute('href') === '#' + cur);
+  });
+});
+function toggleDrill(el) {
+  const ans = el.nextElementSibling;
+  const icon = el.querySelector('.drill-toggle-icon');
+  ans.classList.toggle('open');
+  icon.textContent = ans.classList.contains('open') ? '−' : '+';
+}
+function checkQuiz(id, el, isCorrect) {
+  const container = document.getElementById(id);
+  if (container.querySelector('.disabled')) return;
+  container.querySelectorAll('.quiz-opt').forEach(o => o.classList.add('disabled'));
+  el.classList.add(isCorrect ? 'correct' : 'wrong');
+  const fb = document.getElementById(id + '-feedback');
+  fb.classList.add('show', isCorrect ? 'correct' : 'wrong');
+  if (id === 'q1') {
+    fb.textContent = isCorrect
+      ? '✓ 정답입니다. Write-Back 후 보고서 미반영의 원인 1순위는 Plan Version(VERSN) 매핑 오류입니다. 데이터는 ACDOCP에 존재하나 S/4 보고서가 조회하는 VERSN과 불일치하면 나타나지 않습니다.'
+      : '✗ 오답입니다. API 오류 없이 성공으로 표시되나 보고서에 안 보이는 증상은 VERSN 매핑 오류가 1순위입니다. Account 유효성 문제는 API 자체가 실패합니다.';
+  } else {
+    fb.textContent = isCorrect
+      ? '✓ 정답입니다. SAC Planning + SAP_COM_0087 Write-Back으로 예산 편성과 ACDOCP 반영은 가능합니다. 그러나 Hard AVC(지출 차단)는 CO AVC 전담이며, Public Cloud Commercial 에디션에서 구조적으로 제한됩니다. 고객사에 반드시 선제적으로 전달해야 할 사항입니다.'
+      : '✗ 오답입니다. Hard AVC는 Datasphere나 SAC로 해결할 수 없습니다. CO AVC 전담 기능이며 Public Cloud Commercial 에디션의 구조적 제약입니다.';
+  }
+}
+function toggleCheck(el, clId) {
+  el.classList.toggle('checked');
+  const checked = document.querySelectorAll(`#${clId} .checklist-item.checked`).length;
+  const total = document.querySelectorAll(`#${clId} .checklist-item`).length;
+  document.getElementById(clId + '-bar').style.width = (checked / total * 100) + '%';
+  document.getElementById(clId + '-score').textContent = `${checked} / ${total} 완료`;
+}
+</script>
+</body>
+</html>

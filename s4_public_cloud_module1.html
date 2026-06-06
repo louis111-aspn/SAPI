@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 1 — S/4HANA Public Cloud 비용 통제 기능과 한계</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #003366;
+  --navy-light: #e8eef5;
+  --navy-mid: #1a4a7a;
+  --gray-dark: #333333;
+  --gray-mid: #666666;
+  --gray-light: #f4f6f9;
+  --gray-border: #d0d8e4;
+  --bg: #f0f3f8;
+  --white: #ffffff;
+  --correct: #1a6e3c;
+  --correct-bg: #e8f5ee;
+  --wrong: #8b1a1a;
+  --wrong-bg: #faeaea;
+  --warn: #7a5200;
+  --warn-bg: #fff8e6;
+  --font-serif: 'DM Serif Display', serif;
+  --font-sans: 'Noto Sans KR', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Noto Sans KR', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--gray-dark);
+  background: var(--bg);
+  line-height: 1.7;
+}
+
+/* ── HEADER ── */
+.header {
+  background: var(--navy);
+  color: var(--white);
+  padding: 48px 64px 40px;
+}
+.header-label {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.header h1 {
+  font-family: var(--font-serif);
+  font-size: 42px;
+  font-weight: 400;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+.header-sub {
+  font-size: 16px;
+  color: rgba(255,255,255,0.72);
+  font-weight: 300;
+}
+.header-meta {
+  display: flex;
+  gap: 24px;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.15);
+}
+.header-meta-item {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+}
+.header-meta-item span {
+  color: rgba(255,255,255,0.88);
+  font-weight: 600;
+}
+
+/* ── STICKY NAV ── */
+.nav-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--white);
+  border-bottom: 2px solid var(--navy);
+  overflow-x: auto;
+}
+.nav-tabs {
+  display: flex;
+  min-width: max-content;
+  padding: 0 64px;
+}
+.nav-tab {
+  padding: 14px 20px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--gray-mid);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: block;
+  margin-bottom: -2px;
+}
+.nav-tab:hover { color: var(--navy); }
+.nav-tab.active {
+  color: var(--navy);
+  border-bottom-color: var(--navy);
+}
+
+/* ── LAYOUT ── */
+.main { max-width: 1100px; margin: 0 auto; padding: 0 64px 80px; }
+.section {
+  padding: 56px 0 0;
+  scroll-margin-top: 60px;
+}
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--navy);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.section-title {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 400;
+  color: var(--navy);
+  margin-bottom: 8px;
+  line-height: 1.25;
+}
+.section-desc {
+  font-size: 15px;
+  color: var(--gray-mid);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+.divider {
+  height: 1px;
+  background: var(--gray-border);
+  margin: 48px 0 0;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: 2px;
+  padding: 24px 28px;
+}
+.card + .card { margin-top: 12px; }
+
+/* ── CALLOUT ── */
+.callout {
+  padding: 16px 20px;
+  border-radius: 2px;
+  margin: 20px 0;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.callout.navy {
+  background: var(--navy-light);
+  border-left: 3px solid var(--navy);
+  color: var(--navy);
+}
+.callout.warn {
+  background: var(--warn-bg);
+  border-left: 3px solid #e6a000;
+  color: var(--warn);
+}
+.callout.correct {
+  background: var(--correct-bg);
+  border-left: 3px solid var(--correct);
+  color: var(--correct);
+}
+.callout.wrong {
+  background: var(--wrong-bg);
+  border-left: 3px solid var(--wrong);
+  color: var(--wrong);
+}
+.callout-title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+/* ── TABLE ── */
+.tbl-wrap { overflow-x: auto; margin: 20px 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+thead tr { background: var(--navy); color: var(--white); }
+thead th {
+  padding: 11px 14px;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+tbody tr { border-bottom: 1px solid var(--gray-border); }
+tbody tr:hover { background: var(--gray-light); }
+tbody td { padding: 10px 14px; vertical-align: top; }
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+.tag.yes { background: var(--correct-bg); color: var(--correct); }
+.tag.partial { background: var(--warn-bg); color: var(--warn); }
+.tag.no { background: var(--wrong-bg); color: var(--wrong); }
+
+/* ── GRID ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 20px 0; }
+@media (max-width: 768px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .main { padding: 0 24px 64px; }
+  .header { padding: 32px 24px 28px; }
+  .nav-tabs { padding: 0 24px; }
+}
+
+/* ── FLOW DIAGRAM ── */
+.flow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 20px 0;
+}
+.flow-item {
+  background: var(--navy-light);
+  border: 1px solid var(--gray-border);
+  border-radius: 2px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--navy);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.flow-arrow {
+  color: var(--navy);
+  font-size: 18px;
+  padding: 0 8px;
+  font-weight: 700;
+}
+
+/* ── EDITION COMPARE ── */
+.edition-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 20px 0;
+}
+.edition-card {
+  background: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.edition-card.highlight { border-color: var(--navy); border-width: 2px; }
+.edition-head {
+  padding: 14px 18px;
+  background: var(--gray-light);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navy);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.edition-card.highlight .edition-head {
+  background: var(--navy);
+  color: var(--white);
+}
+.edition-body { padding: 16px 18px; }
+.edition-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--gray-border);
+  font-size: 13px;
+}
+.edition-row:last-child { border-bottom: none; }
+
+/* ── ALLOCATION TABLE ── */
+.alloc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 20px 0;
+}
+
+/* ── ACDOCP FIELD ── */
+.field-table { margin: 20px 0; }
+.field-row {
+  display: grid;
+  grid-template-columns: 180px 140px 1fr;
+  gap: 0;
+  border-bottom: 1px solid var(--gray-border);
+  font-size: 13px;
+}
+.field-row:first-child {
+  background: var(--navy);
+  color: var(--white);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+.field-row:nth-child(even):not(:first-child) { background: var(--gray-light); }
+.field-cell {
+  padding: 9px 14px;
+}
+.field-name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navy);
+}
+.field-key {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--wrong);
+  background: var(--wrong-bg);
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+
+/* ── DRILL / TOGGLE ── */
+.drill-card {
+  background: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: 2px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.drill-question {
+  padding: 16px 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  user-select: none;
+}
+.drill-question:hover { background: var(--gray-light); }
+.drill-toggle-icon {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  color: var(--navy);
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+.drill-answer {
+  display: none;
+  padding: 16px 20px;
+  background: var(--navy-light);
+  border-top: 1px solid var(--gray-border);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--navy);
+}
+.drill-answer.open { display: block; }
+
+/* ── QUIZ ── */
+.quiz-block { margin: 20px 0; }
+.quiz-q {
+  font-weight: 500;
+  font-size: 15px;
+  margin-bottom: 14px;
+  line-height: 1.55;
+}
+.quiz-options { display: flex; flex-direction: column; gap: 8px; }
+.quiz-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 16px;
+  background: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+  user-select: none;
+}
+.quiz-opt:hover { border-color: var(--navy); background: var(--navy-light); }
+.quiz-opt.correct { background: var(--correct-bg); border-color: var(--correct); color: var(--correct); }
+.quiz-opt.wrong { background: var(--wrong-bg); border-color: var(--wrong); color: var(--wrong); }
+.quiz-opt.disabled { cursor: default; pointer-events: none; }
+.opt-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 20px;
+  margin-top: 1px;
+}
+.quiz-feedback {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 2px;
+  font-size: 14px;
+  display: none;
+}
+.quiz-feedback.show { display: block; }
+.quiz-feedback.correct { background: var(--correct-bg); color: var(--correct); border-left: 3px solid var(--correct); }
+.quiz-feedback.wrong { background: var(--wrong-bg); color: var(--wrong); border-left: 3px solid var(--wrong); }
+
+/* ── CHECKLIST ── */
+.checklist-wrap { margin: 20px 0; }
+.checklist-progress {
+  height: 6px;
+  background: var(--gray-border);
+  border-radius: 3px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.checklist-bar {
+  height: 100%;
+  background: var(--navy);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-border);
+  cursor: pointer;
+  user-select: none;
+}
+.checklist-item:last-child { border-bottom: none; }
+.check-box {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--gray-border);
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.checklist-item.checked .check-box {
+  background: var(--navy);
+  border-color: var(--navy);
+}
+.check-mark {
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  display: none;
+}
+.checklist-item.checked .check-mark { display: block; }
+.check-text { font-size: 14px; line-height: 1.55; }
+.checklist-item.checked .check-text {
+  color: var(--gray-mid);
+  text-decoration: line-through;
+}
+.checklist-score {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--gray-mid);
+  margin-top: 12px;
+}
+
+/* ── FM COMPARE ── */
+.fm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 20px 0;
+}
+.fm-card {
+  background: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.fm-head {
+  padding: 12px 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.fm-head.pub-sector { background: var(--navy); color: var(--white); }
+.fm-head.commercial { background: var(--gray-light); color: var(--gray-mid); }
+.fm-body { padding: 14px 18px; }
+.fm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--gray-border);
+  font-size: 13px;
+  gap: 8px;
+}
+.fm-row:last-child { border-bottom: none; }
+
+/* ── DECISION TREE (checklist style) ── */
+.decision-block {
+  background: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: 2px;
+  padding: 24px 28px;
+  margin: 20px 0;
+}
+.decision-section { margin-bottom: 20px; }
+.decision-section:last-child { margin-bottom: 0; }
+.decision-head {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 2px;
+  margin-bottom: 12px;
+  display: inline-block;
+}
+.decision-head.green { background: var(--correct-bg); color: var(--correct); }
+.decision-head.yellow { background: var(--warn-bg); color: var(--warn); }
+.decision-head.red { background: var(--wrong-bg); color: var(--wrong); }
+.decision-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 14px;
+}
+.decision-bullet {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+/* ── CODE BLOCK ── */
+.code-block {
+  background: #1e2430;
+  color: #cdd6f4;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 20px 24px;
+  border-radius: 2px;
+  overflow-x: auto;
+  line-height: 1.65;
+  margin: 16px 0;
+}
+.code-comment { color: #6c7086; }
+.code-key { color: #89b4fa; }
+.code-val { color: #a6e3a1; }
+.code-warn { color: #fab387; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-label">ASPN BAC사업부 · SAP 전문가 교육 시리즈 · Module 1 of 2</div>
+  <h1>S/4HANA Public Cloud<br>비용 통제 기능과 한계</h1>
+  <div class="header-sub">무엇이 가능하고, 무엇이 안 되며, 왜 그런가</div>
+  <div class="header-meta">
+    <div class="header-meta-item">대상 <span>신입/주니어 컨설턴트 · SAC/GR 담당</span></div>
+    <div class="header-meta-item">섹션 <span>6개</span></div>
+    <div class="header-meta-item">선수 지식 <span>SAP FI/CO 기초</span></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-wrap">
+  <div class="nav-tabs">
+    <a class="nav-tab active" href="#s1" onclick="setTab(this)">1-1 에디션 지형도</a>
+    <a class="nav-tab" href="#s2" onclick="setTab(this)">1-2 CO 기능 범위</a>
+    <a class="nav-tab" href="#s3" onclick="setTab(this)">1-3 배부·차이 실무</a>
+    <a class="nav-tab" href="#s4" onclick="setTab(this)">1-4 FM 모듈</a>
+    <a class="nav-tab" href="#s5" onclick="setTab(this)">1-5 ACDOCA/ACDOCP</a>
+    <a class="nav-tab" href="#s6" onclick="setTab(this)">1-6 도입 판단 프레임</a>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ═══════════════════════════════════════════════
+     SECTION 1-1 에디션 지형도 & Clean Core
+═══════════════════════════════════════════════ -->
+<div class="section" id="s1">
+  <div class="section-label">Section 1-1</div>
+  <div class="section-title">S/4HANA 에디션 지형도 & Clean Core 원칙</div>
+  <div class="section-desc">왜 Public Cloud에서 CO 기능이 제한되는지 이해하려면, 에디션 구조와 그 기반이 되는 설계 철학부터 파악해야 한다.</div>
+
+  <div class="edition-grid">
+    <div class="edition-card">
+      <div class="edition-head">On-Premise</div>
+      <div class="edition-body">
+        <div class="edition-row"><span>커스터마이징</span><span class="tag yes">무제한</span></div>
+        <div class="edition-row"><span>ABAP 개발</span><span class="tag yes">가능</span></div>
+        <div class="edition-row"><span>CO 기능</span><span class="tag yes">완전 지원</span></div>
+        <div class="edition-row"><span>업그레이드 주기</span><span>자체 결정</span></div>
+        <div class="edition-row"><span>운영 책임</span><span>고객사</span></div>
+      </div>
+    </div>
+    <div class="edition-card">
+      <div class="edition-head">PCE (Private Cloud Edition)</div>
+      <div class="edition-body">
+        <div class="edition-row"><span>커스터마이징</span><span class="tag partial">제한적</span></div>
+        <div class="edition-row"><span>ABAP 개발</span><span class="tag partial">BTP 경유</span></div>
+        <div class="edition-row"><span>CO 기능</span><span class="tag yes">대부분 지원</span></div>
+        <div class="edition-row"><span>업그레이드 주기</span><span>SAP 권고</span></div>
+        <div class="edition-row"><span>운영 책임</span><span>SAP 파트너</span></div>
+      </div>
+    </div>
+    <div class="edition-card highlight">
+      <div class="edition-head">Public Cloud ← 이 모듈의 범위</div>
+      <div class="edition-body">
+        <div class="edition-row"><span>커스터마이징</span><span class="tag no">불가</span></div>
+        <div class="edition-row"><span>ABAP 개발</span><span class="tag no">불가</span></div>
+        <div class="edition-row"><span>CO 기능</span><span class="tag partial">표준만 지원</span></div>
+        <div class="edition-row"><span>업그레이드 주기</span><span>분기 자동</span></div>
+        <div class="edition-row"><span>운영 책임</span><span>SAP</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout navy">
+    <div class="callout-title">Clean Core 원칙이란</div>
+    SAP S/4HANA Public Cloud의 핵심 설계 철학. 표준 코드베이스를 보호하기 위해 고객사의 ABAP 직접 수정을 원칙적으로 차단한다. 확장은 반드시 <strong>BTP(Business Technology Platform)</strong> 위에서 Side-by-Side 방식으로만 허용된다. 빠른 업그레이드 적용과 SaaS 운영 효율이 목표이지만, 이것이 곧 CO 기능 제약의 직접 원인이다.
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-title">컨설턴트 함정</div>
+    On-Premise 경험을 가진 컨설턴트가 Public Cloud 프로젝트에 투입될 때, "당연히 되겠지"라고 가정하는 기능의 상당수가 실제로는 지원되지 않는다. 프로젝트 초기 요건 수집 단계에서 반드시 에디션 확인이 선행되어야 한다.
+  </div>
+
+  <div class="callout correct">
+    <div class="callout-title">실무 포인트</div>
+    고객사가 "S/4HANA 도입하겠다"고 말할 때, 첫 번째 질문은 반드시 <strong>"어느 에디션입니까?"</strong>여야 한다. 에디션에 따라 가능한 설계 범위가 근본적으로 달라진다.
+  </div>
+</div>
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════
+     SECTION 1-2 CO 기능 지원 범위
+═══════════════════════════════════════════════ -->
+<div class="section" id="s2">
+  <div class="section-label">Section 1-2</div>
+  <div class="section-title">CO 기능 지원 범위 전체 지도</div>
+  <div class="section-desc">지원 / 제한 / 미지원을 명확히 구분하는 것이 컨설턴트의 첫 번째 역량이다. 아래 표를 완전히 내재화하라.</div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>CO 기능 영역</th>
+          <th>On-Prem / PCE</th>
+          <th>Public Cloud</th>
+          <th>제약 핵심 내용</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Cost Center Accounting</strong></td>
+          <td><span class="tag yes">완전 지원</span></td>
+          <td><span class="tag yes">지원</span></td>
+          <td>Fiori 앱 중심, KSB1 상당 기능 제공</td>
+        </tr>
+        <tr>
+          <td><strong>Profit Center Accounting</strong></td>
+          <td><span class="tag yes">완전 지원</span></td>
+          <td><span class="tag yes">지원</span></td>
+          <td>Account-based 수익성 분석 가능</td>
+        </tr>
+        <tr>
+          <td><strong>Internal Order</strong></td>
+          <td><span class="tag yes">완전 지원</span></td>
+          <td><span class="tag partial">제한적</span></td>
+          <td>단순 집계용만 가능, 복잡한 결산 로직 불가</td>
+        </tr>
+        <tr>
+          <td><strong>Product Costing</strong></td>
+          <td><span class="tag yes">완전 지원</span></td>
+          <td><span class="tag partial">제한적</span></td>
+          <td>Standard Cost 위주, MTO 복잡 구조 한계</td>
+        </tr>
+        <tr>
+          <td><strong>CO-PA (Account-Based)</strong></td>
+          <td><span class="tag yes">완전 지원</span></td>
+          <td><span class="tag yes">지원</span></td>
+          <td>Universal Journal 기반 수익성 분석 가능</td>
+        </tr>
+        <tr>
+          <td><strong>CO-PA (Costing-Based)</strong></td>
+          <td><span class="tag yes">완전 지원</span></td>
+          <td><span class="tag no">미지원</span></td>
+          <td>가치 필드(Value Field) 기반 분석 불가 — 핵심 제약</td>
+        </tr>
+        <tr>
+          <td><strong>Overhead Allocation (배부)</strong></td>
+          <td><span class="tag yes">완전 지원</span></td>
+          <td><span class="tag partial">제한적</span></td>
+          <td>Assessment / Distribution만, Iterative 미지원</td>
+        </tr>
+        <tr>
+          <td><strong>Activity-Based Costing</strong></td>
+          <td><span class="tag yes">완전 지원</span></td>
+          <td><span class="tag no">미지원</span></td>
+          <td>Activity Type 기반 원가 배분 불가</td>
+        </tr>
+        <tr>
+          <td><strong>WBS / Project Controlling</strong></td>
+          <td><span class="tag yes">완전 지원</span></td>
+          <td><span class="tag yes">지원</span></td>
+          <td>PS 모듈 기본 지원, CAPEX 통제 유효</td>
+        </tr>
+        <tr>
+          <td><strong>Budget Availability Control</strong></td>
+          <td><span class="tag yes">완전 지원</span></td>
+          <td><span class="tag partial">제한적</span></td>
+          <td>Hard Stop 설정 불가, Soft Control만</td>
+        </tr>
+        <tr>
+          <td><strong>Variance Analysis</strong></td>
+          <td><span class="tag yes">완전 지원</span></td>
+          <td><span class="tag partial">제한적</span></td>
+          <td>Price/Qty Variance 기본 지원, KOB3 수준 불가</td>
+        </tr>
+        <tr>
+          <td><strong>Funds Management (FM)</strong></td>
+          <td><span class="tag yes">완전 지원</span></td>
+          <td><span class="tag no">상업용 미지원</span></td>
+          <td>Public Sector Edition만 가능 (1-4 섹션 상세)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout navy">
+    <div class="callout-title">핵심 요약 — 3대 미지원 영역</div>
+    <strong>① Costing-Based CO-PA</strong> — 제품/채널별 정밀 수익성 분석 불가<br>
+    <strong>② Activity-Based Costing</strong> — 내부 서비스 원가 계산 구조 불가<br>
+    <strong>③ FM Hard AVC</strong> — 예산 초과 시 전기 차단(Hard Stop) 불가
+  </div>
+
+  <div class="quiz-block">
+    <div class="card">
+      <div class="quiz-q">📝 확인 문제 — Public Cloud에서 지원되지 않는 기능은 어느 것인가?</div>
+      <div class="quiz-options" id="q1">
+        <div class="quiz-opt" onclick="checkQuiz('q1',this,false)"><span class="opt-label">A</span> Account-Based CO-PA를 통한 수익성 분석</div>
+        <div class="quiz-opt" onclick="checkQuiz('q1',this,false)"><span class="opt-label">B</span> Cost Center 계획 대비 실적 비교</div>
+        <div class="quiz-opt" onclick="checkQuiz('q1',this,true)"><span class="opt-label">C</span> Costing-Based CO-PA 가치 필드 분석</div>
+        <div class="quiz-opt" onclick="checkQuiz('q1',this,false)"><span class="opt-label">D</span> WBS 기반 프로젝트 예산 통제</div>
+      </div>
+      <div class="quiz-feedback" id="q1-feedback"></div>
+    </div>
+  </div>
+</div>
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════
+     SECTION 1-3 배부·차이 실무 구조
+═══════════════════════════════════════════════ -->
+<div class="section" id="s3">
+  <div class="section-label">Section 1-3</div>
+  <div class="section-title">Overhead Allocation · Variance 실무 구조</div>
+  <div class="section-desc">배부 방식의 차이와 각각의 Public Cloud 지원 여부를 이해해야 고객사 요건을 정확히 해석할 수 있다.</div>
+
+  <div class="alloc-grid">
+    <div class="card">
+      <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--correct);margin-bottom:10px;">✅ ASSESSMENT (평가배부)</div>
+      <div style="font-size:14px;line-height:1.7;">
+        원가를 <strong>2차 비용 요소</strong>로 변환하여 수신 코스트센터로 재분류한다. 발신 CC의 원래 비용 요소 정보는 사라지고, 배부 전용 Secondary CE로 집계된다.
+      </div>
+      <div class="flow" style="margin-top:12px;">
+        <div class="flow-item">발신 CC</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item">2차 CE 변환</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item">수신 CC</div>
+      </div>
+      <div class="callout correct" style="margin-top:12px;">Public Cloud 지원</div>
+    </div>
+    <div class="card">
+      <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--correct);margin-bottom:10px;">✅ DISTRIBUTION (직접배부)</div>
+      <div style="font-size:14px;line-height:1.7;">
+        원래의 <strong>1차 비용 요소</strong>를 그대로 유지하면서 수신 CC로 이전한다. 어디서 비용이 발생했는지 원천 정보가 보존된다.
+      </div>
+      <div class="flow" style="margin-top:12px;">
+        <div class="flow-item">발신 CC</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item">1차 CE 유지</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item">수신 CC</div>
+      </div>
+      <div class="callout correct" style="margin-top:12px;">Public Cloud 지원</div>
+    </div>
+    <div class="card">
+      <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--warn);margin-bottom:10px;">⚠️ ACTIVITY ALLOCATION (활동배부)</div>
+      <div style="font-size:14px;line-height:1.7;">
+        <strong>Activity Type</strong>과 Activity Price를 기준으로 내부 서비스를 배부한다. 시간·수량 단위의 내부 가격 계산이 필요하다.
+      </div>
+      <div class="flow" style="margin-top:12px;">
+        <div class="flow-item">서비스 제공 CC</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item">Activity Price</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item">수혜 CC</div>
+      </div>
+      <div class="callout warn" style="margin-top:12px;">기본 지원, 복잡한 Price Calc 제한</div>
+    </div>
+    <div class="card">
+      <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--wrong);margin-bottom:10px;">❌ ITERATIVE / TEMPLATE ALLOCATION</div>
+      <div style="font-size:14px;line-height:1.7;">
+        복잡한 <strong>상호 배부(Iterative)</strong> 또는 수식 기반 Template 배부. 공통비를 여러 단계에 걸쳐 순환 배분하는 구조.
+      </div>
+      <div style="margin-top:12px;"></div>
+      <div class="callout wrong" style="margin-top:12px;">Public Cloud 미지원 — 설계 시 대안 필요</div>
+    </div>
+  </div>
+
+  <div style="margin-top:28px;">
+    <div class="section-label" style="font-size:12px;">Variance Analysis 지원 범위</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>차이 유형</th>
+            <th>Public Cloud</th>
+            <th>설명</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Price Variance (가격 차이)</td>
+            <td><span class="tag yes">지원</span></td>
+            <td>표준 단가 vs 실제 단가 차이</td>
+          </tr>
+          <tr>
+            <td>Quantity Variance (수량 차이)</td>
+            <td><span class="tag yes">지원</span></td>
+            <td>표준 투입량 vs 실제 투입량 차이</td>
+          </tr>
+          <tr>
+            <td>Overhead Variance (간접비 차이)</td>
+            <td><span class="tag yes">기본 지원</span></td>
+            <td>표준 간접비 흡수 vs 실제 발생 차이</td>
+          </tr>
+          <tr>
+            <td>Mixed Price Variance</td>
+            <td><span class="tag partial">제한적</span></td>
+            <td>복합 가격 변동 분석 제한</td>
+          </tr>
+          <tr>
+            <td>Variance Category (KOB3 수준)</td>
+            <td><span class="tag no">미지원</span></td>
+            <td>세분화된 차이 카테고리 분류 불가</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="drill-card">
+    <div class="drill-question" onclick="toggleDrill(this)">
+      <span>💬 고객사 CO 담당자가 "우리는 IT·HR 공통비를 각 사업부에 순환 배부하는 구조를 쓴다"고 합니다. Public Cloud 도입 시 무엇을 먼저 확인해야 합니까?</span>
+      <span class="drill-toggle-icon">+</span>
+    </div>
+    <div class="drill-answer">
+      <strong>핵심 확인 포인트:</strong> "순환 배부"는 Iterative Allocation을 의미하며, Public Cloud에서 미지원이다. 먼저 배부 단계 수와 순환 구조 여부를 확인한 뒤, Assessment/Distribution 방식의 단순화로 요건을 충족할 수 있는지 논의해야 한다. 불가능하다면 PCE 또는 BTP Extension을 검토해야 하며, 이것은 에디션 선택에 영향을 주는 요소다.
+    </div>
+  </div>
+</div>
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════
+     SECTION 1-4 FM 모듈
+═══════════════════════════════════════════════ -->
+<div class="section" id="s4">
+  <div class="section-label">Section 1-4</div>
+  <div class="section-title">FM(Funds Management) 모듈 — 한계와 대안</div>
+  <div class="section-desc">공공기관 및 예산 통제가 엄격한 조직이 Public Cloud 도입을 검토할 때, FM 지원 범위 파악이 핵심 의사결정 변수가 된다.</div>
+
+  <div class="fm-grid">
+    <div class="fm-card">
+      <div class="fm-head pub-sector">Public Sector Edition — FM 완전 지원</div>
+      <div class="fm-body">
+        <div class="fm-row"><span>Fund / Functional Area 마스터</span><span class="tag yes">✅</span></div>
+        <div class="fm-row"><span>Budget Address (예산 주소)</span><span class="tag yes">✅</span></div>
+        <div class="fm-row"><span>Availability Control (AVC) Hard Stop</span><span class="tag yes">✅</span></div>
+        <div class="fm-row"><span>Commitment Management</span><span class="tag yes">✅</span></div>
+        <div class="fm-row"><span>Budget Transfer</span><span class="tag yes">✅</span></div>
+        <div class="fm-row"><span>Earmarked Funds</span><span class="tag yes">✅</span></div>
+        <div class="fm-row"><span>Year-End Closing (FM)</span><span class="tag yes">✅</span></div>
+        <div class="fm-row"><span>Grant Management 연계</span><span class="tag yes">✅</span></div>
+      </div>
+    </div>
+    <div class="fm-card">
+      <div class="fm-head commercial">Commercial Edition — FM 미지원</div>
+      <div class="fm-body">
+        <div class="fm-row"><span>Fund / Functional Area 마스터</span><span class="tag no">❌</span></div>
+        <div class="fm-row"><span>Budget Address (예산 주소)</span><span class="tag no">❌</span></div>
+        <div class="fm-row"><span>Availability Control (AVC) Hard Stop</span><span class="tag no">❌</span></div>
+        <div class="fm-row"><span>Commitment Management</span><span class="tag partial">부분</span></div>
+        <div class="fm-row"><span>Budget Transfer</span><span class="tag no">❌</span></div>
+        <div class="fm-row"><span>Earmarked Funds</span><span class="tag no">❌</span></div>
+        <div class="fm-row"><span>Year-End Closing (FM)</span><span class="tag no">❌</span></div>
+        <div class="fm-row"><span>Grant Management 연계</span><span class="tag no">❌</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:8px;font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--gray-dark);margin-bottom:14px;">Commercial Edition 예산 통제 대안 3종</div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--navy);margin-bottom:8px;">대안 ① Internal Order Budget</div>
+      <div style="font-size:13px;line-height:1.65;color:var(--gray-dark);">
+        Internal Order 단위 예산 설정. Warning/Error 레벨 지정 가능.
+      </div>
+      <div class="callout warn" style="margin-top:10px;font-size:13px;">Order 단위 한정 — CC 전체 Hard Control 불가</div>
+    </div>
+    <div class="card">
+      <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--navy);margin-bottom:8px;">대안 ② WBS Budget Control</div>
+      <div style="font-size:13px;line-height:1.65;color:var(--gray-dark);">
+        WBS Element 단위 예산 Hard Stop 가능. CAPEX 성격 지출에 효과적.
+      </div>
+      <div class="callout correct" style="margin-top:10px;font-size:13px;">프로젝트 예산 통제에 유효</div>
+    </div>
+    <div class="card">
+      <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--navy);margin-bottom:8px;">대안 ③ CC Plan + 워크플로우</div>
+      <div style="font-size:13px;line-height:1.65;color:var(--gray-dark);">
+        Plan/Actual 모니터링 + 초과 시 BTP 기반 승인 워크플로우 발동. 시스템 차단은 아님.
+      </div>
+      <div class="callout warn" style="margin-top:10px;font-size:13px;">Soft Control — 전기 차단 불가</div>
+    </div>
+  </div>
+
+  <div class="drill-card" style="margin-top:20px;">
+    <div class="drill-question" onclick="toggleDrill(this)">
+      <span>💬 공기업 고객사가 "예산 초과 시 구매 발주가 시스템에서 막혀야 한다"고 요구합니다. Public Cloud Commercial 에디션으로 대응 가능합니까?</span>
+      <span class="drill-toggle-icon">+</span>
+    </div>
+    <div class="drill-answer">
+      <strong>결론: 불가능하다.</strong> Hard AVC(Availability Control)는 FM 모듈의 핵심 기능이며, Commercial Edition에서는 미지원이다. WBS Budget Control로 프로젝트성 지출은 일부 통제할 수 있으나, 운영비 전반에 대한 구매 오더 차단은 불가능하다. 이 요건이 필수라면 <strong>Public Sector Edition 또는 PCE/On-Premise</strong>를 검토해야 하며, 이것을 프로젝트 초기 단계에서 고객사 의사결정권자에게 명확히 전달해야 한다.
+    </div>
+  </div>
+</div>
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════
+     SECTION 1-5 ACDOCA / ACDOCP 구조
+═══════════════════════════════════════════════ -->
+<div class="section" id="s5">
+  <div class="section-label">Section 1-5</div>
+  <div class="section-title">ACDOCA / ACDOCP 구조 — Universal Journal의 이해</div>
+  <div class="section-desc">SAC Planning에서 S/4HANA로 Write-Back할 때 데이터가 어디에 쌓이는지 이해하는 것이 Module 2의 핵심 전제다.</div>
+
+  <div class="callout navy">
+    <div class="callout-title">Universal Journal이란</div>
+    S/4HANA의 단일 실적 테이블 구조. 기존에 FI, CO, AA, ML 등 각 모듈에 분산되어 있던 전표 데이터를 <strong>ACDOCA 하나</strong>로 통합한 것이 핵심이다. "하나의 진실(Single Source of Truth)"이 가능해졌다.
+  </div>
+
+  <div class="grid-2" style="margin-top:20px;">
+    <div class="card">
+      <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--navy);margin-bottom:12px;">ACDOCA — 실적 데이터</div>
+      <div class="field-table">
+        <div class="field-row">
+          <div class="field-cell">필드명</div>
+          <div class="field-cell">유형</div>
+          <div class="field-cell">설명</div>
+        </div>
+        <div class="field-row">
+          <div class="field-cell"><span class="field-name">RLDNR</span></div>
+          <div class="field-cell"><span class="field-key">KEY</span></div>
+          <div class="field-cell">원장(Ledger)</div>
+        </div>
+        <div class="field-row">
+          <div class="field-cell"><span class="field-name">RBUKRS</span></div>
+          <div class="field-cell"><span class="field-key">KEY</span></div>
+          <div class="field-cell">회사 코드</div>
+        </div>
+        <div class="field-row">
+          <div class="field-cell"><span class="field-name">GJAHR / POPER</span></div>
+          <div class="field-cell"><span class="field-key">KEY</span></div>
+          <div class="field-cell">회계연도 / 기간</div>
+        </div>
+        <div class="field-row">
+          <div class="field-cell"><span class="field-name">KOSTL</span></div>
+          <div class="field-cell">원가객체</div>
+          <div class="field-cell">코스트센터</div>
+        </div>
+        <div class="field-row">
+          <div class="field-cell"><span class="field-name">KSTAR</span></div>
+          <div class="field-cell">원가요소</div>
+          <div class="field-cell">Cost Element</div>
+        </div>
+        <div class="field-row">
+          <div class="field-cell"><span class="field-name">HSL</span></div>
+          <div class="field-cell">금액</div>
+          <div class="field-cell">회사통화 금액</div>
+        </div>
+        <div class="field-row">
+          <div class="field-cell"><span class="field-name">PRCTR</span></div>
+          <div class="field-cell">원가객체</div>
+          <div class="field-cell">손익센터</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--navy);margin-bottom:12px;">ACDOCP — 계획 데이터 (Write-Back 타겟)</div>
+      <div class="field-table">
+        <div class="field-row">
+          <div class="field-cell">필드명</div>
+          <div class="field-cell">유형</div>
+          <div class="field-cell">설명</div>
+        </div>
+        <div class="field-row">
+          <div class="field-cell"><span class="field-name">RLDNR</span></div>
+          <div class="field-cell"><span class="field-key">KEY</span></div>
+          <div class="field-cell">원장(Ledger)</div>
+        </div>
+        <div class="field-row">
+          <div class="field-cell"><span class="field-name">RBUKRS</span></div>
+          <div class="field-cell"><span class="field-key">KEY</span></div>
+          <div class="field-cell">회사 코드</div>
+        </div>
+        <div class="field-row">
+          <div class="field-cell"><span class="field-name">VERSN</span></div>
+          <div class="field-cell"><span class="field-key">KEY ★</span></div>
+          <div class="field-cell">계획 버전 — Write-Back 핵심 키</div>
+        </div>
+        <div class="field-row">
+          <div class="field-cell"><span class="field-name">GJAHR / POPER</span></div>
+          <div class="field-cell"><span class="field-key">KEY</span></div>
+          <div class="field-cell">회계연도 / 기간</div>
+        </div>
+        <div class="field-row">
+          <div class="field-cell"><span class="field-name">VRGAR</span></div>
+          <div class="field-cell">레코드타입</div>
+          <div class="field-cell">'F' = 원가계획 고정값</div>
+        </div>
+        <div class="field-row">
+          <div class="field-cell"><span class="field-name">KOSTL / KSTAR</span></div>
+          <div class="field-cell">원가객체</div>
+          <div class="field-cell">CC / CE 매핑 대상</div>
+        </div>
+        <div class="field-row">
+          <div class="field-cell"><span class="field-name">HSL / KSL</span></div>
+          <div class="field-cell">금액</div>
+          <div class="field-cell">회사통화 / CO통화 분리</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warn" style="margin-top:8px;">
+    <div class="callout-title">ACDOCP를 이해해야 하는 이유</div>
+    SAC Planning에서 작성한 계획 데이터를 S/4HANA에 반영하려면 결국 ACDOCP에 써야 한다. 이 테이블에 기록되지 않으면 S/4의 Plan/Actual 비교 보고서에 전혀 나타나지 않는다. <strong>Write-Back의 유일한 표준 타겟 테이블</strong>이다.
+  </div>
+
+  <div class="callout navy" style="margin-top:8px;">
+    <div class="callout-title">ACDOCA vs ACDOCP 핵심 차이</div>
+    ACDOCA는 실제 발생한 전표 데이터(Actual). ACDOCP는 계획 데이터(Plan). 구조는 거의 동일하나 ACDOCP에는 <strong>VERSN(계획 버전)</strong> 필드가 추가되어 있으며, VRGAR='F'로 고정되어야 한다. 이 두 가지를 잘못 처리하면 계획 데이터가 전기되어도 보고서에 반영되지 않는 문제가 발생한다.
+  </div>
+</div>
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════
+     SECTION 1-6 도입 적합성 판단 프레임
+═══════════════════════════════════════════════ -->
+<div class="section" id="s6">
+  <div class="section-label">Section 1-6</div>
+  <div class="section-title">도입 적합성 판단 프레임</div>
+  <div class="section-desc">고객사 요건 수집 후 Public Cloud 적합 여부를 판단하는 구조화된 프레임워크. 체크리스트를 완성하면 에디션 권고안이 도출된다.</div>
+
+  <div class="decision-block">
+    <div class="decision-section">
+      <div class="decision-head green">✅ Public Cloud Commercial 적합 조건</div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>표준 SAP 프로세스를 수용할 의지와 경영진 의지가 있다</span></div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>비용 통제 구조가 Cost Center / Profit Center 중심의 단순 구조다</span></div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>제조업 비중이 낮거나 단순한 표준원가 구조다 (서비스업, 유통업)</span></div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>Costing-Based CO-PA가 현재 없거나 Account-Based로 전환 가능하다</span></div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>6~12개월 이내의 빠른 Go-Live가 최우선 목표다</span></div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>예산 초과 시 경고(Warning)만으로도 통제 가능하다 (Hard Stop 불필요)</span></div>
+    </div>
+    <div class="decision-section">
+      <div class="decision-head yellow">⚠️ 주의 깊게 검토해야 하는 조건</div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>복잡한 공통비 배부 로직이 있다 (Iterative / Template 방식)</span></div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>MTO 환경 또는 다단계 BOM을 가진 제조업이다</span></div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>Activity Type 기반 내부 서비스 원가 계산이 필요하다</span></div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>고객사 고유의 차이 분석 로직이 KOB3 수준 이상으로 복잡하다</span></div>
+    </div>
+    <div class="decision-section">
+      <div class="decision-head red">❌ PCE / On-Premise 검토 권고 조건</div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>예산 초과 시 구매/회계 전기 차단(Hard AVC)이 필수 요건이다</span></div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>공공기관으로 예산회계법 적용 대상이다 (Earmarked Funds, Budget Transfer 필요)</span></div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>Costing-Based CO-PA 기반 수익성 분석이 핵심 경영 KPI다</span></div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>ABAP 기반 커스터마이징이 불가피한 비즈니스 고유 로직이 있다</span></div>
+      <div class="decision-item"><span class="decision-bullet">□</span><span>Activity-Based Costing 구조가 원가 관리의 핵심이다</span></div>
+    </div>
+  </div>
+
+  <div style="margin-top:28px;font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--gray-dark);margin-bottom:14px;">자기 점검 체크리스트 — 이 모듈에서 습득한 핵심 역량</div>
+
+  <div class="checklist-wrap" id="cl1">
+    <div class="checklist-progress"><div class="checklist-bar" id="cl1-bar"></div></div>
+    <div class="checklist-item" onclick="toggleCheck(this,'cl1')">
+      <div class="check-box"><span class="check-mark">✓</span></div>
+      <div class="check-text">S/4HANA 3가지 에디션(On-Premise, PCE, Public Cloud)의 핵심 차이를 설명할 수 있다</div>
+    </div>
+    <div class="checklist-item" onclick="toggleCheck(this,'cl1')">
+      <div class="check-box"><span class="check-mark">✓</span></div>
+      <div class="check-text">Public Cloud에서 미지원되는 3대 CO 기능(Costing-Based CO-PA, ABC, FM Hard AVC)을 즉시 말할 수 있다</div>
+    </div>
+    <div class="checklist-item" onclick="toggleCheck(this,'cl1')">
+      <div class="check-box"><span class="check-mark">✓</span></div>
+      <div class="check-text">Assessment와 Distribution의 차이, 그리고 Iterative가 왜 미지원인지 설명할 수 있다</div>
+    </div>
+    <div class="checklist-item" onclick="toggleCheck(this,'cl1')">
+      <div class="check-box"><span class="check-mark">✓</span></div>
+      <div class="check-text">FM 모듈이 Commercial Edition에서 미지원임을 알고, 3가지 대안의 한계를 설명할 수 있다</div>
+    </div>
+    <div class="checklist-item" onclick="toggleCheck(this,'cl1')">
+      <div class="check-box"><span class="check-mark">✓</span></div>
+      <div class="check-text">ACDOCA와 ACDOCP의 구조적 차이와 VERSN 필드의 중요성을 설명할 수 있다</div>
+    </div>
+    <div class="checklist-item" onclick="toggleCheck(this,'cl1')">
+      <div class="check-box"><span class="check-mark">✓</span></div>
+      <div class="check-text">고객사 요건 수집 시 Public Cloud 적합 여부를 판단하는 체크리스트를 활용할 수 있다</div>
+    </div>
+    <div class="checklist-score" id="cl1-score">0 / 6 완료</div>
+  </div>
+
+  <div class="quiz-block" style="margin-top:28px;">
+    <div class="card">
+      <div class="quiz-q">📝 최종 확인 문제 — 다음 고객사 요건 중 Public Cloud 도입 시 가장 먼저 경고해야 하는 것은?</div>
+      <div class="quiz-options" id="q2">
+        <div class="quiz-opt" onclick="checkQuiz('q2',this,false)"><span class="opt-label">A</span> 코스트센터별 월별 예산 대비 실적을 Fiori로 모니터링하겠다</div>
+        <div class="quiz-opt" onclick="checkQuiz('q2',this,false)"><span class="opt-label">B</span> 프로젝트(WBS) 단위로 CAPEX 예산을 Hard 통제하겠다</div>
+        <div class="quiz-opt" onclick="checkQuiz('q2',this,true)"><span class="opt-label">C</span> 구매 부서 예산 소진 시 구매 오더 생성을 시스템이 자동 차단해야 한다</div>
+        <div class="quiz-opt" onclick="checkQuiz('q2',this,false)"><span class="opt-label">D</span> Account-Based CO-PA로 손익센터별 수익성을 분석하겠다</div>
+      </div>
+      <div class="quiz-feedback" id="q2-feedback"></div>
+    </div>
+  </div>
+
+  <div class="callout navy" style="margin-top:28px;">
+    <div class="callout-title">Module 1 완료 — 다음 단계</div>
+    Module 2에서는 SAC Planning에서 S/4HANA로 데이터를 어떻게 연결하고, ACDOCP에 어떻게 쓰는지, 그리고 실무에서 어떤 장애가 발생하는지를 다룬다. ACDOCP 구조 이해가 전제이므로, 이 섹션(1-5)을 확실히 숙지한 후 진행하라.
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// Tab active state
+function setTab(el) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Scroll spy
+const sections = document.querySelectorAll('.section');
+const tabs = document.querySelectorAll('.nav-tab');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 100) current = s.id;
+  });
+  tabs.forEach(t => {
+    t.classList.toggle('active', t.getAttribute('href') === '#' + current);
+  });
+});
+
+// Drill toggle
+function toggleDrill(el) {
+  const ans = el.nextElementSibling;
+  const icon = el.querySelector('.drill-toggle-icon');
+  ans.classList.toggle('open');
+  icon.textContent = ans.classList.contains('open') ? '−' : '+';
+}
+
+// Quiz
+function checkQuiz(id, el, isCorrect) {
+  const container = document.getElementById(id);
+  if (container.querySelector('.disabled')) return;
+  container.querySelectorAll('.quiz-opt').forEach(o => o.classList.add('disabled'));
+  el.classList.add(isCorrect ? 'correct' : 'wrong');
+  const fb = document.getElementById(id + '-feedback');
+  fb.classList.add('show', isCorrect ? 'correct' : 'wrong');
+  if (id === 'q1') {
+    fb.textContent = isCorrect
+      ? '✓ 정답입니다. Costing-Based CO-PA는 가치 필드(Value Field) 기반 분석 구조로, Public Cloud에서 지원되지 않습니다.'
+      : '✗ 오답입니다. Account-Based CO-PA, CC 계획/실적 비교, WBS 예산 통제는 모두 지원됩니다. 미지원 항목은 Costing-Based CO-PA입니다.';
+  } else {
+    fb.textContent = isCorrect
+      ? '✓ 정답입니다. 구매 오더 Hard 차단은 FM Availability Control(AVC) 기능으로, Commercial Edition에서 미지원입니다. 프로젝트 초기 단계에서 반드시 고객사 의사결정권자에게 전달해야 합니다.'
+      : '✗ 오답입니다. A(CC 모니터링), B(WBS CAPEX), D(Account-Based CO-PA)는 모두 지원됩니다. C의 구매 Hard 차단이 FM AVC 요건으로 미지원입니다.';
+  }
+}
+
+// Checklist
+function toggleCheck(el, clId) {
+  el.classList.toggle('checked');
+  const items = document.querySelectorAll(`#${clId} .checklist-item`);
+  const checked = document.querySelectorAll(`#${clId} .checklist-item.checked`).length;
+  const total = items.length;
+  const pct = (checked / total) * 100;
+  document.getElementById(clId + '-bar').style.width = pct + '%';
+  document.getElementById(clId + '-score').textContent = `${checked} / ${total} 완료`;
+}
+</script>
+</body>
+</html>
